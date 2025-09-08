@@ -1,0 +1,14 @@
+/*
+	File Name  : HelloPalm.rcp
+*/
+
+#include "../src/HelloPalm.h"
+
+FORM ID MainForm AT (0 0 160 160)
+USABLE
+NOSAVEBEHIND
+BEGIN
+    TITLE "Hello"
+    LABEL "Hello, Palm Os World!" ID MainHelloMessageLabel AT (10 30) USABLE FONT 7
+END
+
