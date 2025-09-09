@@ -91,17 +91,17 @@ static Boolean AppHandleEvent(EventPtr eventP)
      {
        if (eventP->data.ctlEnter.controlID == MainHighButton)
          {
-           WinDrawChars("High button pressed", StrLen("High button pressed"),
-               40, 80);
            WinEraseChars("Low button pressed", StrLen("Low button pressed"),
-               40, 100);
+               40, 90);
+           WinDrawChars("High button pressed", StrLen("High button pressed"),
+               40, 90);
          }
        else if (eventP->data.ctlEnter.controlID == MainLowButton)
          {
+        	WinEraseChars("High button pressed", StrLen("High button pressed"),
+               40, 90);
            WinDrawChars("Low button pressed", StrLen("Low button pressed"),
-               40, 100);
-           WinEraseChars("High button pressed", StrLen("High button pressed"),
-               40, 80);
+               40, 90);
          }
        handled = true;
      }
