@@ -11,6 +11,8 @@ MENUID MainMenuBar
 BEGIN
     TITLE "Hello"
     LABEL "Hello, Palm Os World!" ID MainHelloMessageLabel AT (10 30) USABLE FONT 7
+    BUTTON "High" ID MainHighButton AT (60 40 36 12) USABLE LEFTANCHOR FRAME
+    BUTTON "Low" ID MainLowButton AT (60 120 36 12) USABLE LEFTANCHOR FRAME
 END
 
 FORM ID AboutForm AT (0 0 160 160)

@@ -22,3 +22,5 @@
 #define ErrorAlert                                         1007
 #define InformationAlert                                   1008
 #define WarningAlert                                       1009
+#define MainHighButton                                     1010
+#define MainLowButton                                      1011
