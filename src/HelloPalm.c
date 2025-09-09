@@ -105,7 +105,10 @@ static Boolean AppHandleEvent(EventPtr eventP)
          }
        else if (eventP->data.ctlSelect.controlID == MainSubmitButton)
          {
-        ControlType *One,*Two, *Three;
+        ControlType *One,*Two;
+        FieldPtr TextFieldPtr;
+        char Name[128];
+        int NameLength;
 
         frmP = FrmGetActiveForm();
 
@@ -114,6 +117,36 @@ static Boolean AppHandleEvent(EventPtr eventP)
 
         Two = FrmGetObjectPtr(frmP,
                   FrmGetObjectIndex(frmP, MainItemTwoCheckbox));
+
+        TextFieldPtr = FrmGetObjectPtr(frmP,
+          FrmGetObjectIndex(frmP, MainNameField));
+
+        NameLength = FldGetTextLength(TextFieldPtr);
+
+          if (NameLength > 0)
+          {
+             MemHandle TextHandle = FldGetTextHandle(TextFieldPtr);
+             StrCopy(Name, MemHandleLock(TextHandle));
+
+             MemHandleUnlock(TextHandle);
+             Name[NameLength] = NULL;
+
+             WinEraseChars("Must specify name",
+               StrLen("Must specify name"), 60, 60);
+          }
+        else
+            {
+          WinDrawChars("Must specify name",
+            StrLen("Must specify name"), 60, 60);
+          }
+
+        if (NameLength)
+          {
+                       WinEraseChars("Must specify name",
+               StrLen("Must specify name"), 60, 60);
+                  FldEraseField(TextFieldPtr);
+                    WinDrawChars(Name, StrLen(Name), 60, 60);
+          }
 
         if (CtlGetValue(One))
           {

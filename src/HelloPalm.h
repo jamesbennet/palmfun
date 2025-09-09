@@ -28,3 +28,5 @@
 #define MainItemTwoCheckbox                                1013
 #define MainItemThreeCheckbox                              1014
 #define MainSubmitButton                                   1015
+#define MainNameLabel                                      1016
+#define MainNameField                                      1017
