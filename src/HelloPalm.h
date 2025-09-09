@@ -24,3 +24,7 @@
 #define WarningAlert                                       1009
 #define MainHighButton                                     1010
 #define MainLowButton                                      1011
+#define MainItemOneCheckbox                                1012
+#define MainItemTwoCheckbox                                1013
+#define MainItemThreeCheckbox                              1014
+#define MainSubmitButton                                   1015

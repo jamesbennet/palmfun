@@ -91,18 +91,60 @@ static Boolean AppHandleEvent(EventPtr eventP)
      {
        if (eventP->data.ctlEnter.controlID == MainHighButton)
          {
-           WinEraseChars("Low button pressed", StrLen("Low button pressed"),
-               40, 90);
+           WinEraseChars("High button pressed", StrLen("High button pressed"),
+               60, 40);
            WinDrawChars("High button pressed", StrLen("High button pressed"),
-               40, 90);
+               60, 40);
          }
        else if (eventP->data.ctlEnter.controlID == MainLowButton)
          {
         	WinEraseChars("High button pressed", StrLen("High button pressed"),
-               40, 90);
+               60, 40);
            WinDrawChars("Low button pressed", StrLen("Low button pressed"),
-               40, 90);
+               60, 40);
          }
+       else if (eventP->data.ctlSelect.controlID == MainSubmitButton)
+         {
+        ControlType *One,*Two, *Three;
+
+        frmP = FrmGetActiveForm();
+
+        One = FrmGetObjectPtr(frmP,
+                  FrmGetObjectIndex(frmP, MainItemOneCheckbox));
+
+        Two = FrmGetObjectPtr(frmP,
+                  FrmGetObjectIndex(frmP, MainItemTwoCheckbox));
+
+        if (CtlGetValue(One))
+          {
+        	WinEraseChars("One Not Checked", StrLen("One Not Checked"),
+               80, 80);
+           WinDrawChars("One Checked", StrLen("One Checked"),
+               80, 80);
+           }
+        else
+             {
+        	WinEraseChars("One Not Checked", StrLen("One Not Checked"),
+               80, 80);
+           WinDrawChars("One Not Checked", StrLen("One Not Checked"),
+               80, 80);
+           }
+
+        if (CtlGetValue(Two))
+          {
+        	WinEraseChars("Two Not Checked", StrLen("Two Not Checked"),
+               80, 90);
+           WinDrawChars("Two Checked", StrLen("Two Checked"),
+               80, 90);
+           }
+        else
+             {
+        	WinEraseChars("Two Not Checked", StrLen("Two Not Checked"),
+               80, 90);
+           WinDrawChars("Two Not Checked", StrLen("Two Not Checked"),
+               80, 90);
+           }
+     }
        handled = true;
      }
   return(handled);
