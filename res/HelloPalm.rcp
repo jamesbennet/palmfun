@@ -7,8 +7,16 @@
 FORM ID MainForm AT (0 0 160 160)
 USABLE
 NOSAVEBEHIND
+MENUID MainMenuBar
 BEGIN
     TITLE "Hello"
     LABEL "Hello, Palm Os World!" ID MainHelloMessageLabel AT (10 30) USABLE FONT 7
 END
 
+MENU MenuMenu
+BEGIN
+    PULLDOWN "About"
+    BEGIN
+        MENUITEM "About MenuHelloPalm" ID MenuAboutMenuHelloPalm
+    END
+END

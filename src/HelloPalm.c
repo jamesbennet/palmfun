@@ -30,7 +30,14 @@ static Boolean AppHandleEvent(EventPtr eventP)
        FrmDeleteForm(frmP);
        handled = true;
      }
-    
+    else if (eventP->eType == menuEvent)
+    {
+      if (eventP->data.menu.itemID == MenuAboutMenuHelloPalm)
+      {
+        MenuEraseStatus(0);	// Clear the menu from the display.
+        handled = true;
+      }
+    }
   return(handled);
  }
 
