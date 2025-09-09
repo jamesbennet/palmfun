@@ -26,6 +26,10 @@ MENU MenuMenu
 BEGIN
     PULLDOWN "About"
     BEGIN
+        MENUITEM "Confirmation Alert" ID ConfirmationAlertMenu
+        MENUITEM "Error Alert" ID ErrorAlertMenu
+        MENUITEM "Info Alert" ID InformationAlertMenu
+        MENUITEM "Warning alert" ID WarningAlertMenu
         MENUITEM "About MenuHelloPalm" ID MenuAboutMenuHelloPalm
     END
 END
@@ -37,4 +41,36 @@ BEGIN
     TITLE "Invalid ROM Version"
     BUTTON "OK" ID ROMMsgOKButton AT (65 118 36 12) USABLE LEFTANCHOR FRAME
     LABEL "This application requires \rPalm OS Version 5 or later.\r" ID ROMMsgErrorLabel AT (9 37) USABLE FONT 2
+END
+
+ALERT ID ConfirmationAlert
+CONFIRMATION
+BEGIN
+    TITLE "Confirmation Alert"
+    MESSAGE "This is a confirmation alert--Please confirm"
+    BUTTONS "OK"
+END
+
+ALERT ID ErrorAlert
+ERROR
+BEGIN
+    TITLE "Error Alert"
+    MESSAGE "Applications may display this alert to inform you of an error"
+    BUTTONS "OK"
+END
+
+ALERT ID InformationAlert
+INFORMATION
+BEGIN
+    TITLE "Information Alert"
+    MESSAGE "Applications display information alerts to provide users with status information"
+    BUTTONS "OK"
+END
+
+ALERT ID WarningAlert
+WARNING
+BEGIN
+    TITLE "Warning Alert"
+    MESSAGE "Applications display warning alerts to provide you with a chance to prevent an error"
+    BUTTONS "Got It!" "Understand"
 END

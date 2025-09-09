@@ -62,6 +62,30 @@ static Boolean AppHandleEvent(EventPtr eventP)
         FrmDeleteForm(frmP);
         handled = true;
       }
+      else if (eventP->data.menu.itemID == ConfirmationAlertMenu)
+      {
+        MenuEraseStatus(0);	// Clear the menu from the display.
+        FrmAlert(ConfirmationAlert);
+        handled = true;
+      }
+      else if (eventP->data.menu.itemID == ErrorAlertMenu)
+      {
+        MenuEraseStatus(0);	// Clear the menu from the display.
+        FrmAlert(ErrorAlert);
+        handled = true;
+      }
+      else if (eventP->data.menu.itemID == InformationAlertMenu)
+      {
+        MenuEraseStatus(0);	// Clear the menu from the display.
+        FrmAlert(InformationAlert);
+        handled = true;
+      }
+      else if (eventP->data.menu.itemID == WarningAlertMenu)
+      {
+        MenuEraseStatus(0);	// Clear the menu from the display.
+        FrmAlert(WarningAlert);
+        handled = true;
+      }
     }
   return(handled);
  }
