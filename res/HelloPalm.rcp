@@ -11,7 +11,7 @@ MENUID MainMenuBar
 BEGIN
     TITLE "Hello"
     LABEL "Hello, Palm Os World!" ID MainHelloMessageLabel AT (10 30) USABLE FONT 7
-    BUTTON "High" ID MainHighButton AT (60 40 36 12) USABLE LEFTANCHOR FRAME
+    BUTTON "High" ID MainHighButton AT (60 60 36 12) USABLE LEFTANCHOR FRAME
     BUTTON "Low" ID MainLowButton AT (60 120 36 12) USABLE LEFTANCHOR FRAME
 END
 
@@ -42,7 +42,7 @@ NOSAVEBEHIND
 BEGIN
     TITLE "Invalid ROM Version"
     BUTTON "OK" ID ROMMsgOKButton AT (65 118 36 12) USABLE LEFTANCHOR FRAME
-    LABEL "This application requires \rPalm OS Version 5 or later.\r" ID ROMMsgErrorLabel AT (9 37) USABLE FONT 2
+    LABEL "This application requires \rPalm OS Version 4.0 or later.\r" ID ROMMsgErrorLabel AT (9 37) USABLE FONT 2
 END
 
 ALERT ID ConfirmationAlert
