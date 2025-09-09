@@ -10,3 +10,6 @@
 #define MainMenuBar                                        1000
 #define MenuMenu                                           1000
 #define MenuAboutMenuHelloPalm                             1000
+#define ROMMsgForm                                         1200
+#define ROMMsgOKButton                                     1201
+#define ROMMsgErrorLabel                                   1202

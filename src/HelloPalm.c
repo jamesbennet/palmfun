@@ -1,6 +1,28 @@
 #include <PalmOS.h>
 #include "HelloPalm.h"
 
+// Define version 4.0 as the minimum OS version
+#define MinOSVersion	sysMakeROMVersion(4,0,0,sysROMStageRelease,0)
+
+static Err RomVersionCompatible(UInt32 requiredVersion)
+{
+  UInt32 romVersion;
+  FormType *frmP;
+
+
+  FtrGet(sysFtrCreator, sysFtrNumROMVersion, &romVersion);
+
+  if (romVersion < requiredVersion)
+  {
+    frmP = FrmInitForm(ROMMsgForm);
+    FrmDoDialog(frmP);		// Display the invalid ROM form
+    FrmDeleteForm(frmP);
+    return sysErrRomIncompatible;
+  }
+
+  return errNone;
+}
+
 static Boolean AppHandleEvent(EventPtr eventP)
  {
    UInt16 formId;
@@ -49,6 +71,9 @@ UInt32 PilotMain(UInt16 cmd, MemPtr cmdPBP, UInt16 launchFlags)
  {
    EventType event;
    Err err = 0;
+
+  if ((err = RomVersionCompatible(MinOSVersion)))
+    return(err);
   
    switch (cmd)
      {

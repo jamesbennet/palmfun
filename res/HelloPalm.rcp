@@ -29,3 +29,12 @@ BEGIN
         MENUITEM "About MenuHelloPalm" ID MenuAboutMenuHelloPalm
     END
 END
+
+FORM ID ROMMsgForm AT (0 0 160 160)
+USABLE
+NOSAVEBEHIND
+BEGIN
+    TITLE "Invalid ROM Version"
+    BUTTON "OK" ID ROMMsgOKButton AT (65 118 36 12) USABLE LEFTANCHOR FRAME
+    LABEL "This application requires \rPalm OS Version 5 or later.\r" ID ROMMsgErrorLabel AT (9 37) USABLE FONT 2
+END
