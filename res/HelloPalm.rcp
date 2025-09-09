@@ -13,6 +13,15 @@ BEGIN
     LABEL "Hello, Palm Os World!" ID MainHelloMessageLabel AT (10 30) USABLE FONT 7
 END
 
+FORM ID AboutForm AT (0 0 160 160)
+USABLE
+SAVEBEHIND
+BEGIN
+    TITLE "About"
+    BUTTON "OK" ID AboutOKButton AT (65 131 36 12) USABLE LEFTANCHOR FRAME
+    LABEL "HelloPalm 1.0" ID AboutMessageLabel AT (5 24) USABLE FONT 1
+END
+
 MENU MenuMenu
 BEGIN
     PULLDOWN "About"

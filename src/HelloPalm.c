@@ -35,6 +35,9 @@ static Boolean AppHandleEvent(EventPtr eventP)
       if (eventP->data.menu.itemID == MenuAboutMenuHelloPalm)
       {
         MenuEraseStatus(0);	// Clear the menu from the display.
+        frmP = FrmInitForm(AboutForm);
+        FrmDoDialog(frmP);					// Display the About Box.
+        FrmDeleteForm(frmP);
         handled = true;
       }
     }
