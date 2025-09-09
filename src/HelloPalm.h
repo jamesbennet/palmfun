@@ -30,3 +30,4 @@
 #define MainSubmitButton                                   1015
 #define MainNameLabel                                      1016
 #define MainNameField                                      1017
+#define MainAnimalsList                                    1018
