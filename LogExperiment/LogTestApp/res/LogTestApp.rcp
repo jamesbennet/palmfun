@@ -1,7 +1,0 @@
-// LogTestApp.rcp
-
-FORM ID 1000 AT (2 20 156 130)
-BEGIN
-    TITLE "LogTestApp"
-    BUTTON "Hello" ID 1001 AT (40 50 76 14)
-END
