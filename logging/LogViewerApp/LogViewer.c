@@ -351,15 +351,16 @@ static void AppEventLoop(void)
     EventType event;
     UInt16 err;
 
-    OpenMainForm();
+    /* Open the main form the usual way */
+    FrmGotoForm(LogViewerFormID);
 
     do {
         EvtGetEvent(&event, evtWaitForever);
 
         if (!SysHandleEvent(&event))
-        if (!MenuHandleEvent(0, &event, &err))
-        if (!AppHandleEvent(&event))
-            FrmDispatchEvent(&event);
+            if (!MenuHandleEvent(0, &event, &err))
+                if (!AppHandleEvent(&event))
+                    FrmDispatchEvent(&event);
 
     } while (event.eType != appStopEvent);
 }
