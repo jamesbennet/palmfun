@@ -1,6 +1,7 @@
 // LogViewerApp.rcp
 
 FORM ID 2000 AT (2 14 156 142)
+BEGIN
     TITLE "LogViewer"
     // App filter (popup)
     LABEL "App:" AT (6 18)
