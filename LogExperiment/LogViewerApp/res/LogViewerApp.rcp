@@ -31,7 +31,7 @@ BEGIN
 
     /* Log field + scrollbar */
     FIELD ID LogFieldID AT (6 50 130 82)
-        UNDERLINED 0
+        UNDERLINED
         MULTIPLELINES
         USABLE 1
         DYNAMIC_SIZE
