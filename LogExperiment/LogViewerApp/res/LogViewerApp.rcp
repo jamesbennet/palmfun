@@ -34,7 +34,6 @@ BEGIN
         UNDERLINED
         MULTIPLELINES
         USABLE
-        DYNAMIC_SIZE
         AUTO_SHIFT
         AUTO_SCROLL
     END
