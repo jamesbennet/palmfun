@@ -2,7 +2,6 @@
 
 #define ViewerFormID    2000
 #define LogFieldID      2001
-#define LogScrollBarID  2002
 #define ClearButtonID   2003
 #define AppTrigID       2004
 #define AppListID       2005
@@ -18,18 +17,18 @@ BEGIN
 
     /* App filter (popup) */
     LABEL "App:" ID AppLabelID AT (6 18)
-    POPUPTRIGGER "All apps" ID AppTrigID AT (28 16 70 12) LIST AppListID
+    POPUPTRIGGER "All apps" ID AppTrigID AT (28 16 70 12)
     LIST ID AppListID AT (28 28 100 60) VISIBLEITEMS 5
 
     /* Date filter (popup) */
     LABEL "Date:" ID DateLabelID AT (100 18)
-    POPUPTRIGGER "All time" ID DateLabelID AT (125 16 60 12) LIST DateListID
+    POPUPTRIGGER "All time" ID DateTrigID AT (125 16 60 12)
     LIST ID DateListID AT (125 28 60 45) VISIBLEITEMS 3
 
     /* Clear button */
     BUTTON "Clear Log" ID ClearButtonID AT (50 34 56 12)
 
-    /* Log field + scrollbar */
+    /* Log field (no SCROLLBAR resource; we draw one programmatically) */
     /* Field width 130 if you want a 10px bar at x=138, y=50, h=82 */
     FIELD ID LogFieldID AT (6 50 130 82)
         UNDERLINED
