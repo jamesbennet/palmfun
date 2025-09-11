@@ -1,0 +1,191 @@
+#include "LogDB.h"
+
+static DmOpenRef sLogDB = NULL;
+static Char sAppName[32]; /* short name is fine; truncated if needed */
+
+static Err LogDB_OpenOrCreate(void)
+{
+    Err err;
+    UInt16 cardNo;
+    LocalID dbID;
+    UInt16 mode;
+
+    mode = dmModeReadWrite;
+    sLogDB = DmOpenDatabaseByTypeCreator(LOGDB_TYPE, LOGDB_CREATOR, mode);
+    if (sLogDB != NULL) return errNone;
+
+    err = DmCreateDatabase(0, LOGDB_NAME, LOGDB_CREATOR, LOGDB_TYPE, false);
+    if (err != errNone) return err;
+    err = DmFindDatabase(0, LOGDB_NAME, &cardNo, &dbID);
+    if (err != errNone) return err;
+
+    /* Set Backup bit, so HotSync backs it up. */
+    {
+        UInt16 attrs = 0;
+        Char name[dmDBNameLength];
+        UInt16 version = 0;
+        UInt32 crDate = 0, modDate = 0, bckDate = 0, modNum = 0, type = LOGDB_TYPE, creator = LOGDB_CREATOR, uniqueIDSeed = 0;
+        UInt32 appInfoID = 0, sortInfoID = 0;
+
+        /* Get current info, then set attrs |= dmHdrAttrBackup */
+        DmDatabaseInfo(cardNo, dbID, name, &attrs, &version, &crDate, &modDate, &bckDate,
+                       &modNum, &appInfoID, &sortInfoID, &type, &creator);
+        attrs |= dmHdrAttrBackup;
+        DmSetDatabaseInfo(cardNo, dbID, NULL, &attrs, NULL, NULL, NULL, NULL,
+                          NULL, NULL, NULL, NULL, NULL);
+    }
+
+    sLogDB = DmOpenDatabase(0, dbID, mode);
+    if (sLogDB == NULL) return dmErrCantOpen;
+
+    return errNone;
+}
+
+Err LogDB_Init(const Char *appName)
+{
+    Err err;
+    UInt16 n;
+
+    if (appName == NULL) return dmErrInvalidParam;
+
+    n = StrLen(appName);
+    if (n >= sizeof(sAppName)) n = sizeof(sAppName) - 1;
+    MemMove(sAppName, appName, n);
+    sAppName[n] = 0;
+
+    err = LogDB_OpenOrCreate();
+    return err;
+}
+
+void LogDB_Close(void)
+{
+    if (sLogDB != NULL) {
+        DmCloseDatabase(sLogDB);
+        sLogDB = NULL;
+    }
+}
+
+Err LogDB_Log(const Char *message)
+{
+    Err err;
+    UInt32 secs;
+    DateTimeType dt;
+    MemHandle h;
+    UInt16 index;
+    Char *dst;
+    UInt32 size;
+    UInt16 appLen, msgLen;
+
+    if (sLogDB == NULL) {
+        err = LogDB_OpenOrCreate();
+        if (err != errNone) return err;
+    }
+
+    if (message == NULL) message = "";
+
+    secs = TimGetSeconds();
+    TimSecondsToDateTime(secs, &dt); /* not strictly required for storage; we store secs */
+
+    appLen = (UInt16)StrLen(sAppName);
+    msgLen = (UInt16)StrLen(message);
+    size = 4 + (UInt32)appLen + 1 + (UInt32)msgLen + 1;
+
+    h = DmNewRecord(sLogDB, &index, size);
+    if (h == NULL) return dmErrMemError;
+
+    dst = (Char *)MemHandleLock(h);
+    if (dst == NULL) {
+        DmRemoveRecord(sLogDB, index);
+        return dmErrMemError;
+    }
+
+    /* Write payload: [UInt32 seconds][appName\0][message\0] */
+    DmWrite(dst, 0, &secs, 4);
+    DmWrite(dst, 4, sAppName, appLen + 1);
+    DmWrite(dst, 4 + appLen + 1, message, msgLen + 1);
+
+    MemHandleUnlock(h);
+
+    /* Commit */
+    err = DmReleaseRecord(sLogDB, index, true);
+    return err;
+}
+
+Err LogDB_ClearAll(void)
+{
+    Err err;
+    UInt16 n, i;
+
+    if (sLogDB == NULL) {
+        err = LogDB_OpenOrCreate();
+        if (err != errNone) return err;
+    }
+
+    n = DmNumRecords(sLogDB);
+    for (i = 0; i < n; i++) {
+        /* Always remove first record repeatedly because indexes shift */
+        if (DmRemoveRecord(sLogDB, 0) != errNone) {
+            /* if a record can't be removed, stop */
+            break;
+        }
+    }
+    return errNone;
+}
+
+/* --- Iteration helpers for viewer --- */
+
+Err LogDB_IterBegin(LogDB_Iter *it)
+{
+    if (it == NULL) return dmErrInvalidParam;
+    MemSet(it, sizeof(LogDB_Iter), 0);
+    it->dbR = DmOpenDatabaseByTypeCreator(LOGDB_TYPE, LOGDB_CREATOR, dmModeReadOnly);
+    if (it->dbR == NULL) return dmErrCantOpen;
+    it->count = DmNumRecords(it->dbR);
+    it->index = 0;
+    return errNone;
+}
+
+MemHandle LogDB_IterNext(LogDB_Iter *it, UInt32 *seconds, Char **appPtr, Char **msgPtr)
+{
+    MemHandle h;
+    Char *p;
+    UInt16 len;
+
+    if (it == NULL || it->dbR == NULL) return NULL;
+    if (it->index >= it->count) return NULL;
+
+    h = DmQueryRecord(it->dbR, it->index);
+    it->index++;
+    if (h == NULL) return NULL;
+
+    p = (Char *)MemHandleLock(h);
+    if (p == NULL) return NULL;
+
+    if (seconds != NULL) {
+        /* UInt32 stored as native endian */
+        *seconds = *(UInt32 *)(p);
+    }
+    p += 4;
+
+    if (appPtr != NULL) *appPtr = p;
+    len = (UInt16)StrLen(p);
+    p += (UInt32)len + 1;
+
+    if (msgPtr != NULL) *msgPtr = p;
+
+    return h;
+}
+
+void LogDB_IterUnlock(MemHandle h)
+{
+    if (h != NULL) MemHandleUnlock(h);
+}
+
+void LogDB_IterEnd(LogDB_Iter *it)
+{
+    if (it != NULL && it->dbR != NULL) {
+        DmCloseDatabase(it->dbR);
+        it->dbR = NULL;
+    }
+}
+

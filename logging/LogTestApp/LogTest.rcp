@@ -1,0 +1,14 @@
+#include "LogTest.h"
+
+APPLICATIONICONNAME ID 1 "LogTestApp"
+VERSION ID 1 "1.0"
+
+FORM ID LogTestFormID AT (2 18 156 140)  /* leave room for silkscreen area */
+  USABLE
+BEGIN
+  TITLE "LogTestApp"
+  BUTTON "Hello" ID LogTestBtnHelloID AT (CENTER 60 AUTO AUTO) USABLE
+END
+
+/* App signature inside resources (recommended by Palm tooling) */
+APPLICATION ID 1 "LTst"

@@ -2,3 +2,4 @@
 src/*.o
 build/
 *.prc
+copy.sh

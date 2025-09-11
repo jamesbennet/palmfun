@@ -1,0 +1,32 @@
+#include "LogViewer.h"
+
+APPLICATIONICONNAME ID 1 "LogViewerApp"
+VERSION ID 1 "1.0"
+
+/* Main form */
+FORM ID LogViewerFormID AT (2 18 156 140)
+  USABLE
+BEGIN
+  TITLE "LogViewer"
+
+  /* App filter (left) */
+  LABEL "App:" AUTOID AT (6 16)
+  POPUPTRIGGER "All" ID LogViewerAppTrigID AT (30 14 60 AUTO) USABLE
+  LIST "All" ID LogViewerAppListID AT (30 26 90 1) VISIBLEITEMS 5 NONUSABLE
+  POPUPLIST ID LogViewerAppTrigID LogViewerAppListID
+
+  /* Time filter (right) */
+  LABEL "Time:" AUTOID AT (98 16)
+  POPUPTRIGGER "All" ID LogViewerTimeTrigID AT (126 14 28 AUTO) USABLE
+  LIST "All" "Last hour" "Last 24h" "Last 7d" "Today"
+    ID LogViewerTimeListID AT (110 26 40 1) VISIBLEITEMS 5 NONUSABLE
+  POPUPLIST ID LogViewerTimeTrigID LogViewerTimeListID
+
+  /* Big multi-line field with scrollbar */
+  FIELD ID LogViewerFldID AT (6 32 140 90) USABLE MULTIPLELINES DYNAMICSIZE HASSCROLLBAR
+  SCROLLBAR ID LogViewerScbID AT (148 32 8 90) USABLE
+
+  BUTTON "Clear" ID LogViewerBtnClearID AT (CENTER 126 AUTO AUTO) USABLE
+END
+
+APPLICATION ID 1 "LVwr"
