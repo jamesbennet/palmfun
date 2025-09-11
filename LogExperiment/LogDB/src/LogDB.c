@@ -137,12 +137,11 @@ typedef struct {
     UInt16 recIndex;
 } SortItem;
 
-static Int16 CmpDescByTs(void* a, void* b, Int16 other) {
+static Int16 CmpDescByTs(void* a, void* b, Int32 other) {
     const SortItem* pa;
     const SortItem* pb;
 
     (void)other; /* unused */
-    /* descending timestamp */
     pa = (const SortItem*)a;
     pb = (const SortItem*)b;
     if (pa->ts == pb->ts) return 0;
@@ -167,7 +166,7 @@ Err LogDB_Enum(Boolean newestFirst, LogDB_EnumCallback cb, void* ctx) {
     Char* msg;
     Boolean cont;
 
-    if (!cb) return dmErrParamErr;
+    if (!cb) return sysErrParamErr;
 
     db = NULL;
     err = prvOpenDbRead(&db);
