@@ -13,7 +13,7 @@ OBJS  := LogViewer.o ../common/LogDB.o
 all: $(APP).prc
 
 $(APP).prc: $(APP) $(APP).ro
-	build-prc -o $(APP).prc -t $(TYPE) -c $(CREA) $(APP) $(APP).ro
+	build-prc -o $(APP).prc -t $(TYPE) -c $(CREA) -n "$(APP)" $(APP) $(APP).ro
 
 $(APP): $(OBJS)
 	$(CC) $(CFLAGS) -o $(APP) $(OBJS) $(LDFLAGS)
