@@ -15,7 +15,7 @@ static Err LogDB_OpenOrCreate(void)
 
     /* Create if missing (ignore 'already exists') */
     err = DmCreateDatabase(0, LOGDB_NAME, LOGDB_CREATOR, LOGDB_TYPE, false);
-    if (err != errNone && err != dmErrExists) return err;
+    if (err != errNone && err != dmErrAlreadyExists) return err;
 
     /* Look up the DB ID */
     dbID = DmFindDatabase(0, LOGDB_NAME);
