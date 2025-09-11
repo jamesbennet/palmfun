@@ -28,19 +28,14 @@ BEGIN
     /* Clear button */
     BUTTON "Clear Log" ID ClearButtonID AT (50 34 56 12)
 
-    /* Log field (no SCROLLBAR resource; drawn programmatically) */
-    FIELD ID LogFieldID AT (6 50 130 82)
-        UNDERLINED
-        MULTIPLELINES
-        EDITABLE
-        USABLE
-    END
+    /* Log field (single-line definition; no END here) */
+    FIELD ID LogFieldID AT (6 50 130 82) UNDERLINED MULTIPLELINES EDITABLE USABLE
 END
 
-/* Confirmation alert used by FrmCustomAlert(WarningAlert, ...) */
+/* Confirmation alert */
 ALERT ID WarningAlert
 BEGIN
     TITLE "Confirm"
     MESSAGE "Clear all logs?"
-    BUTTONS "OK" "Cancel"
+    BUTTONS "OK" "Cancel" ""    /* some compilers require 3 labels */
 END
