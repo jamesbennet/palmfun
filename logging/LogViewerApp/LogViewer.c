@@ -537,10 +537,10 @@ static Boolean MainFormHandleEvent(EventType *eventP)
         FrmDrawForm(frm);
 
         /* Make sure the big field is non-editable at runtime too (RCP should already set NONEDITABLE) */
-        fld = (FieldType *)FrmGetObjectPtr(frm, FrmGetObjectIndex(frm, LogViewerFldID));
-        if (fld != NULL) {
-            FldSetEditable(fld, false);
-        }
+        //fld = (FieldType *)FrmGetObjectPtr(frm, FrmGetObjectIndex(frm, LogViewerFldID));
+        //if (fld != NULL) {
+        //    FldSetEditable(fld, false);
+        //}
 
         Viewer_BuildAppChoices();
         Viewer_Refresh();
