@@ -1,9 +1,5 @@
 /* LogViewerApp.c */
 #include <PalmOS.h>
-#include <Form.h>
-#include <Field.h>
-#include <List.h>
-#include <ScrollBar.h>
 #include "LogDB.h"
 
 #define appFileCreator 'LvAp'
@@ -251,10 +247,8 @@ static void LoadAndShowLogs(void) {
     /* Set field text */
     frm = FrmGetActiveForm();
     fld = (FieldType*)FrmGetObjectPtr(frm, FrmGetObjectIndex(frm, LogFieldID));
-    FldFreeze(fld, true);
     FldSetTextHandle(fld, G.textH);
     FldDrawField(fld);
-    FldFreeze(fld, false);
 
     UpdateScrollBar();
 }
