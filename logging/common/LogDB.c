@@ -5,36 +5,41 @@ static Char sAppName[32]; /* short name is fine; truncated if needed */
 
 static Err LogDB_OpenOrCreate(void)
 {
-    Err err;
-    UInt16 cardNo;
+    Err err = errNone;
+    UInt16 mode = dmModeReadWrite;
     LocalID dbID;
-    UInt16 mode;
 
-    mode = dmModeReadWrite;
+    /* Try open by Type/Creator first */
     sLogDB = DmOpenDatabaseByTypeCreator(LOGDB_TYPE, LOGDB_CREATOR, mode);
     if (sLogDB != NULL) return errNone;
 
+    /* Create if missing (ignore 'already exists') */
     err = DmCreateDatabase(0, LOGDB_NAME, LOGDB_CREATOR, LOGDB_TYPE, false);
-    if (err != errNone) return err;
-    err = DmFindDatabase(0, LOGDB_NAME, &cardNo, &dbID);
-    if (err != errNone) return err;
+    if (err != errNone && err != dmErrExists) return err;
 
-    /* Set Backup bit, so HotSync backs it up. */
+    /* Look up the DB ID */
+    dbID = DmFindDatabase(0, LOGDB_NAME);
+    if (dbID == 0) {
+        /* Return the system’s last error if lookup failed */
+        return DmGetLastErr();
+    }
+
+    /* Set Backup bit so HotSync backs up the log */
     {
-        UInt16 attrs = 0;
+        UInt16 attrs = 0, version = 0;
+        UInt32 crDate = 0, modDate = 0, bckDate = 0, modNum = 0;
+        UInt32 type = LOGDB_TYPE, creator = LOGDB_CREATOR;
+        LocalID appInfoID = 0, sortInfoID = 0;
         Char name[dmDBNameLength];
-        UInt16 version = 0;
-        UInt32 crDate = 0, modDate = 0, bckDate = 0, modNum = 0, type = LOGDB_TYPE, creator = LOGDB_CREATOR, uniqueIDSeed = 0;
-        UInt32 appInfoID = 0, sortInfoID = 0;
 
-        /* Get current info, then set attrs |= dmHdrAttrBackup */
-        DmDatabaseInfo(cardNo, dbID, name, &attrs, &version, &crDate, &modDate, &bckDate,
+        DmDatabaseInfo(0, dbID, name, &attrs, &version, &crDate, &modDate, &bckDate,
                        &modNum, &appInfoID, &sortInfoID, &type, &creator);
         attrs |= dmHdrAttrBackup;
-        DmSetDatabaseInfo(cardNo, dbID, NULL, &attrs, NULL, NULL, NULL, NULL,
+        DmSetDatabaseInfo(0, dbID, NULL, &attrs, NULL, NULL, NULL, NULL,
                           NULL, NULL, NULL, NULL, NULL);
     }
 
+    /* Open RW */
     sLogDB = DmOpenDatabase(0, dbID, mode);
     if (sLogDB == NULL) return dmErrCantOpen;
 
@@ -69,7 +74,6 @@ Err LogDB_Log(const Char *message)
 {
     Err err;
     UInt32 secs;
-    DateTimeType dt;
     MemHandle h;
     UInt16 index;
     Char *dst;
@@ -84,7 +88,6 @@ Err LogDB_Log(const Char *message)
     if (message == NULL) message = "";
 
     secs = TimGetSeconds();
-    TimSecondsToDateTime(secs, &dt); /* not strictly required for storage; we store secs */
 
     appLen = (UInt16)StrLen(sAppName);
     msgLen = (UInt16)StrLen(message);
@@ -99,14 +102,13 @@ Err LogDB_Log(const Char *message)
         return dmErrMemError;
     }
 
-    /* Write payload: [UInt32 seconds][appName\0][message\0] */
+    /* [UInt32 seconds][appName\0][message\0] */
     DmWrite(dst, 0, &secs, 4);
     DmWrite(dst, 4, sAppName, appLen + 1);
     DmWrite(dst, 4 + appLen + 1, message, msgLen + 1);
 
     MemHandleUnlock(h);
 
-    /* Commit */
     err = DmReleaseRecord(sLogDB, index, true);
     return err;
 }
@@ -123,11 +125,7 @@ Err LogDB_ClearAll(void)
 
     n = DmNumRecords(sLogDB);
     for (i = 0; i < n; i++) {
-        /* Always remove first record repeatedly because indexes shift */
-        if (DmRemoveRecord(sLogDB, 0) != errNone) {
-            /* if a record can't be removed, stop */
-            break;
-        }
+        if (DmRemoveRecord(sLogDB, 0) != errNone) break;
     }
     return errNone;
 }
@@ -162,7 +160,6 @@ MemHandle LogDB_IterNext(LogDB_Iter *it, UInt32 *seconds, Char **appPtr, Char **
     if (p == NULL) return NULL;
 
     if (seconds != NULL) {
-        /* UInt32 stored as native endian */
         *seconds = *(UInt32 *)(p);
     }
     p += 4;
@@ -188,4 +185,3 @@ void LogDB_IterEnd(LogDB_Iter *it)
         it->dbR = NULL;
     }
 }
-

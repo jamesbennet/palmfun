@@ -422,7 +422,6 @@ static Boolean MainFormHandleEvent(EventType *eventP)
     {
         FormType *frm = FrmGetActiveForm();
         FieldType *fld = (FieldType *)FrmGetObjectPtr(frm, FrmGetObjectIndex(frm, LogViewerFldID));
-        ScrollBarType *scb = (ScrollBarType *)FrmGetObjectPtr(frm, FrmGetObjectIndex(frm, LogViewerScbID));
         Int16 newValue = eventP->data.sclRepeat.newValue;
         Int16 value = eventP->data.sclRepeat.value;
 
