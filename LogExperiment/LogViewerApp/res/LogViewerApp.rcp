@@ -34,8 +34,6 @@ BEGIN
         UNDERLINED
         MULTIPLELINES
         USABLE
-        AUTO_SHIFT
-        AUTO_SCROLL
     END
     SCROLLBAR ID LogScrollBarID AT (138 50 10 82)
 END
