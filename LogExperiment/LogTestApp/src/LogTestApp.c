@@ -1,11 +1,11 @@
-// LogTestApp.c
+/* LogTestApp.c */
 #include <PalmOS.h>
 #include "LogDB.h"
 
 #define appFileCreator 'LtAp'
 #define appName        "LogTestApp"
 
-// Resource IDs
+/* Resource IDs */
 #define MainFormID     1000
 #define HelloButtonID  1001
 
@@ -16,8 +16,13 @@ static Err     AppStart(void);
 static void    AppStop(void);
 
 UInt32 PilotMain(UInt16 cmd, MemPtr cmdPBP, UInt16 launchFlags) {
+    Err err;
+
+    (void)cmdPBP;       /* unused */
+    (void)launchFlags;  /* unused */
+
     if (cmd == sysAppLaunchCmdNormalLaunch) {
-        Err err = AppStart();
+        err = AppStart();
         if (err) return err;
         FrmGotoForm(MainFormID);
         AppEventLoop();
@@ -26,15 +31,18 @@ UInt32 PilotMain(UInt16 cmd, MemPtr cmdPBP, UInt16 launchFlags) {
     return errNone;
 }
 
-static Err AppStart(void) { return errNone; }
+static Err AppStart(void) {
+    return errNone;
+}
+
 static void AppStop(void) {
     FrmCloseAllForms();
 }
 
 static void OnHello(void) {
-    // Log the click
+    /* Log the click */
     LogDB_Log(appName, "Button Clicked");
-    // Optional immediate feedback
+    /* Optional immediate feedback */
     SndPlaySystemSound(sndClick);
 }
 
@@ -55,20 +63,29 @@ static Boolean MainFormHandleEvent(EventType* eventP) {
             handled = true;
         }
         break;
+
+    default:
+        break;
     }
     return handled;
 }
 
 static Boolean AppHandleEvent(EventType* eventP) {
     if (eventP->eType == frmLoadEvent) {
-        UInt16 formID = eventP->data.frmLoad.formID;
-        FormType* frm = FrmInitForm(formID);
+        UInt16 formID;
+        FormType* frm;
+
+        formID = eventP->data.frmLoad.formID;
+        frm = FrmInitForm(formID);
         FrmSetActiveForm(frm);
 
         switch (formID) {
         case MainFormID:
             FrmSetEventHandler(frm, MainFormHandleEvent);
             return true;
+
+        default:
+            break;
         }
     }
     return false;
