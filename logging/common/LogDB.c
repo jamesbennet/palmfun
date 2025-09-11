@@ -34,7 +34,9 @@ static Err LogDB_OpenOrCreate(void)
 
         DmDatabaseInfo(0, dbID, name, &attrs, &version, &crDate, &modDate, &bckDate,
                        &modNum, &appInfoID, &sortInfoID, &type, &creator);
+        /* Make sure DB is backed up and beamable (no copy prevention). */
         attrs |= dmHdrAttrBackup;
+        attrs &= ~dmHdrAttrCopyPrevention;
         DmSetDatabaseInfo(0, dbID, NULL, &attrs, NULL, NULL, NULL, NULL,
                           NULL, NULL, NULL, NULL, NULL);
     }
