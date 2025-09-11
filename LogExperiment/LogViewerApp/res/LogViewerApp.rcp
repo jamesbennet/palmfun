@@ -33,7 +33,7 @@ BEGIN
     FIELD ID LogFieldID AT (6 50 130 82)
         UNDERLINED
         MULTIPLELINES
-        USABLE 1
+        USABLE
         DYNAMIC_SIZE
         AUTO_SHIFT
         AUTO_SCROLL
