@@ -299,7 +299,7 @@ static void SB_Draw(void) {
     thumbR.extent.x  = trackR.extent.x;
     thumbR.extent.y  = (Coord)thumbH;
 
-    WinDrawGrayRectangleFrame(greyFrame, &thumbR);
+    WinDrawRectangleFrame(simpleFrame, &thumbR);
 }
 
 /* Convert a pen Y coordinate in the track to a target field 'pos' (top line index). */
