@@ -1,4 +1,5 @@
-/* LogViewerApp.c — programmatic scrollbar version (Palm OS 4 compatible, C89) */
+/* LogViewerApp.c — custom programmatic scrollbar (no Scl* API)
+   Palm OS 4 compatible, C89 declarations at block starts. */
 #include <PalmOS.h>
 #include <Form.h>
 #include <Field.h>
@@ -14,7 +15,7 @@
 #define ViewerFormID       2000
 #define LogFieldID         2001
 /* there is NO SCROLLBAR control in the .rcp; we draw it programmatically */
-#define LogScrollBarID     2002
+#define LogScrollBarID     2002 /* used only symbolically for consistency */
 #define ClearButtonID      2003
 #define AppTrigID          2004
 #define AppListID          2005
@@ -30,11 +31,10 @@ typedef struct {
     UInt16 selectedDate;  /* 0=All, 1=Last24h, 2=Last7d */
     MemHandle textH;      /* text for the field */
 
-    /* Programmatic scrollbar */
-    ScrollBarType sb;
-    RectangleType sbBounds;
-    Boolean sbInited;
-    UInt16 sbLastValue;
+    /* Custom scrollbar state */
+    RectangleType sbBounds;    /* outer bar rect */
+    RectangleType sbTrack;     /* inner track area where thumb moves */
+    Boolean sbDragging;
 } ViewerState;
 
 static ViewerState G;
@@ -170,6 +170,7 @@ static void BufAppend(BuildBuf* bb, const Char* s) {
     add = (UInt16)StrLen(s);
     /* ensure capacity */
     need = (UInt16)(bb->len + add + 1);
+
     if (!bb->bufH) {
         bb->bufH = MemHandleNew((UInt32)need + 256);
         if (!bb->bufH) return;
@@ -177,6 +178,7 @@ static void BufAppend(BuildBuf* bb, const Char* s) {
         p[0] = 0;
         MemHandleUnlock(bb->bufH);
     }
+
     p = MemHandleLock(bb->bufH);
     cap = (UInt16)MemHandleSize(bb->bufH);
     if (need >= cap) {
@@ -217,98 +219,174 @@ static Boolean EnumBuildTextCB(UInt32 ts, const Char* app, const Char* msg, void
 
 /* Adjust this rectangle to match where you want the scrollbar drawn in your form.
    These coordinates match earlier examples: field at (6,50,130,82) so bar at x=138. */
+/* Adjust to your layout: right-side 10px gutter next to a field at (6,50,w=130,h=82) */
 static void SB_SetBoundsDefault(void) {
     RectangleType r;
+    RectangleType t;
 
     r.topLeft.x = 138;
     r.topLeft.y = 50;
     r.extent.x  = 10;
     r.extent.y  = 82;
     G.sbBounds = r;
+
+    /* Track is the interior where the thumb moves (with 2px padding) */
+    t.topLeft.x = (Coord)(r.topLeft.x + 2);
+    t.topLeft.y = (Coord)(r.topLeft.y + 2);
+    t.extent.x  = (Coord)(r.extent.x  - 4);
+    t.extent.y  = (Coord)(r.extent.y  - 4);
+    G.sbTrack = t;
 }
 
-static void SB_Init(void) {
-    UInt16 value;
-    UInt16 min;
-    UInt16 max;
-    UInt16 pageSize;
-
-    if (G.sbInited) return;
-
-    SB_SetBoundsDefault();
-    /* Initialize scrollbar structure and draw it */
-    SclCreateScrollBar(&G.sb, LogScrollBarID, &G.sbBounds, 0, 0, 0, 1);
-    SclDrawScrollBar(&G.sb);
-
-    /* Track last value to compute delta when user drags */
-    value = 0; min = 0; max = 0; pageSize = 1;
-    SclGetScrollBar(&G.sb, &value, &min, &max, &pageSize);
-    G.sbLastValue = value;
-
-    G.sbInited = true;
+/* Utility: clamp within [a, b] (a <= b) */
+static Int16 Clamp16(Int16 v, Int16 a, Int16 b) {
+    if (v < a) return a;
+    if (v > b) return b;
+    return v;
 }
 
-/* Recompute scrollbar range/position from the field content and redraw it. */
-static void UpdateScrollBar(void) {
+/* Map field scroll values to a thumb rectangle and draw the bar. */
+static void SB_Draw(void) {
     FormType* frm;
     FieldType* fld;
     UInt16 pos;
     UInt16 max;
-    UInt16 pageSize;
-
-    if (!G.sbInited) return;
-
-    frm = FrmGetActiveForm();
-    fld = (FieldType*)FrmGetObjectPtr(frm, FrmGetObjectIndex(frm, LogFieldID));
-
-    max = 0;
-    pos = 0;
-    pageSize = 0;
-    FldGetScrollValues(fld, &pos, &max, &pageSize);
-
-    /* Ensure pageSize is at least 1 to keep the thumb visible */
-    if (pageSize == 0) pageSize = 1;
-
-    SclSetScrollBar(&G.sb, pos, 0, max, pageSize);
-    SclDrawScrollBar(&G.sb);
-    G.sbLastValue = pos;
-}
-
-/* When user manipulates the scrollbar, scroll the field accordingly. */
-static Boolean SB_HandleEvent(EventType* e) {
-    FormType* frm;
-    FieldType* fld;
-    UInt16 value;
-    UInt16 min;
-    UInt16 max;
-    UInt16 pageSize;
-    UInt16 curPos;
-
-    /* Let the scrollbar consume pen events etc. If it returns true,
-       its internal value may have changed. */
-    if (!SclHandleEvent(&G.sb, e)) return false;
+    UInt16 page;
+    RectangleType frameR;
+    RectangleType trackR;
+    RectangleType thumbR;
+    Int16 trackTop;
+    Int16 trackBottom;
+    Int16 trackH;
+    Int16 thumbH;
+    Int16 thumbTop;
 
     frm = FrmGetActiveForm();
     fld = (FieldType*)FrmGetObjectPtr(frm, FrmGetObjectIndex(frm, LogFieldID));
 
-    /* Current field pos */
-    curPos = 0;
-    max = 0;
-    pageSize = 0;
-    FldGetScrollValues(fld, &curPos, &max, &pageSize);
+    pos = 0; max = 0; page = 0;
+    FldGetScrollValues(fld, &pos, &max, &page);
 
-    /* New scrollbar value */
-    value = 0; min = 0; max = 0; pageSize = 1;
-    SclGetScrollBar(&G.sb, &value, &min, &max, &pageSize);
+    /* Draw frame */
+    frameR = G.sbBounds;
+    WinDrawRectangleFrame(simpleFrame, &frameR);
 
-    if (value > curPos) {
-        FldScrollField(fld, (UInt16)(value - curPos), winDown);
-    } else if (value < curPos) {
-        FldScrollField(fld, (UInt16)(curPos - value), winUp);
+    /* Track area */
+    trackR = G.sbTrack;
+    WinEraseRectangle(&trackR, 0);
+
+    /* Compute thumb */
+    trackTop = trackR.topLeft.y;
+    trackBottom = (Int16)(trackR.topLeft.y + trackR.extent.y - 1);
+    trackH = (Int16)(trackBottom - trackTop + 1);
+
+    if (max == 0) {
+        /* Everything visible: draw full thumb */
+        thumbH = trackH;
+        thumbTop = trackTop;
+    } else {
+        /* Thumb height proportional to page/max, min height 6px */
+        thumbH = (Int16)((long)page * trackH / (long)(max + page));
+        if (thumbH < 6) thumbH = 6;
+
+        /* Thumb top proportional to pos/max */
+        thumbTop = (Int16)(trackTop + ((long)pos * (trackH - thumbH)) / (long)max);
     }
 
-    UpdateScrollBar();
-    return true;
+    /* Draw thumb as a filled rectangle */
+    thumbR.topLeft.x = trackR.topLeft.x;
+    thumbR.topLeft.y = thumbTop;
+    thumbR.extent.x  = trackR.extent.x;
+    thumbR.extent.y  = (Coord)thumbH;
+
+    WinDrawGrayRectangleFrame(greyFrame, &thumbR);
+}
+
+/* Convert a pen Y coordinate in the track to a target field 'pos' (top line index). */
+static UInt16 SB_YToPos(Int16 penY) {
+    FormType* frm;
+    FieldType* fld;
+    UInt16 pos;
+    UInt16 max;
+    UInt16 page;
+    Int16 trackTop;
+    Int16 trackH;
+    Int16 y;
+    UInt16 target;
+
+    frm = FrmGetActiveForm();
+    fld = (FieldType*)FrmGetObjectPtr(frm, FrmGetObjectIndex(frm, LogFieldID));
+
+    pos = 0; max = 0; page = 0;
+    FldGetScrollValues(fld, &pos, &max, &page);
+
+    trackTop = G.sbTrack.topLeft.y;
+    trackH = (Int16)G.sbTrack.extent.y;
+
+    if (max == 0 || trackH <= 0) return 0;
+
+    y = Clamp16((Int16)(penY - trackTop), 0, (Int16)(trackH - 1));
+    target = (UInt16)(((long)y * (long)max) / (long)trackH);
+    return target;
+}
+
+/* Scroll the field so its top line becomes approximately 'targetPos'. */
+static void SB_ScrollTo(UInt16 targetPos) {
+    FormType* frm;
+    FieldType* fld;
+    UInt16 pos;
+    UInt16 max;
+    UInt16 page;
+
+    frm = FrmGetActiveForm();
+    fld = (FieldType*)FrmGetObjectPtr(frm, FrmGetObjectIndex(frm, LogFieldID));
+
+    pos = 0; max = 0; page = 0;
+    FldGetScrollValues(fld, &pos, &max, &page);
+
+    if (targetPos > pos) {
+        FldScrollField(fld, (UInt16)(targetPos - pos), winDown);
+    } else if (targetPos < pos) {
+        FldScrollField(fld, (UInt16)(pos - targetPos), winUp);
+    }
+}
+
+/* Handle pen events over the custom scrollbar. Returns true if consumed. */
+static Boolean SB_HandlePenEvent(EventType* e) {
+    Int16 x;
+    Int16 y;
+    Boolean inBar;
+
+    x = 0; y = 0;
+    if (e->eType == penDownEvent) {
+        x = e->screenX; y = e->screenY;
+        inBar = RctPtInRectangle(x, y, &G.sbBounds);
+        if (inBar) {
+            G.sbDragging = true;
+            SB_ScrollTo(SB_YToPos(y));
+            SB_Draw();
+            return true;
+        }
+    } else if (e->eType == penMoveEvent) {
+        if (G.sbDragging) {
+            x = e->screenX; y = e->screenY;
+            SB_ScrollTo(SB_YToPos(y));
+            SB_Draw();
+            return true;
+        }
+    } else if (e->eType == penUpEvent) {
+        if (G.sbDragging) {
+            G.sbDragging = false;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/* Re-sync and redraw the bar with the field’s current scroll values. */
+static void UpdateScrollBar(void) {
+    SB_Draw();
 }
 
 /* ------- UI composition ------- */
@@ -387,11 +465,9 @@ static Boolean ViewerFormHandleEvent(EventType* e) {
 
     handled = false;
 
-    /* First, let our programmatic scrollbar try to handle the event */
-    if (G.sbInited) {
-        if (SB_HandleEvent(e)) {
-            return true;
-        }
+    /* Let custom scrollbar consume pen events first */
+    if (e->eType == penDownEvent || e->eType == penMoveEvent || e->eType == penUpEvent) {
+        if (SB_HandlePenEvent(e)) return true;
     }
 
     switch (e->eType) {
@@ -399,14 +475,11 @@ static Boolean ViewerFormHandleEvent(EventType* e) {
         frm = FrmGetActiveForm();
         FrmDrawForm(frm);
 
-        /* Build UI */
+        SB_SetBoundsDefault();   /* establish bar & track rects */
         BuildAppList();
         InitDateList();
-        LoadAndShowLogs();
-
-        /* Init programmatic scrollbar LAST (bounds rely on drawn form) */
-        SB_Init();
-        UpdateScrollBar();
+        LoadAndShowLogs();       /* draws field */
+        SB_Draw();               /* draw bar after content */
 
         handled = true;
         break;
@@ -501,9 +574,8 @@ static Boolean AppHandleEvent(EventType* e) {
 
 static Err AppStart(void) {
     MemSet(&G, sizeof(G), 0);
-    G.sbInited = false;
-    G.sbLastValue = 0;
     SB_SetBoundsDefault();
+    G.sbDragging = false;
     return errNone;
 }
 
