@@ -1,5 +1,4 @@
 // LogViewerApp.rcp
-#include "PalmRez.h"
 
 FORM ID 2000 AT (2 14 156 142)
     TITLE "LogViewer"

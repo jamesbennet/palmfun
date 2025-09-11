@@ -1,5 +1,4 @@
 // LogTestApp.rcp
-#include "PalmRez.h"
 
 FORM ID 1000 AT (2 20 156 130)
     TITLE "LogTestApp"
