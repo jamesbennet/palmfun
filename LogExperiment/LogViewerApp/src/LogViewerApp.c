@@ -1,20 +1,26 @@
-/* LogViewerApp.c */
+/* LogViewerApp.c — programmatic scrollbar version (Palm OS 4 compatible, C89) */
 #include <PalmOS.h>
+#include <Form.h>
+#include <Field.h>
+#include <List.h>
+#include <ScrollBar.h>
+
 #include "LogDB.h"
 
 #define appFileCreator 'LvAp'
 #define appName        "LogViewerApp"
 
-/* Resource IDs */
+/* Resource IDs (must match your .rcp) */
 #define ViewerFormID       2000
 #define LogFieldID         2001
+/* there is NO SCROLLBAR control in the .rcp; we draw it programmatically */
 #define LogScrollBarID     2002
 #define ClearButtonID      2003
 #define AppTrigID          2004
 #define AppListID          2005
 #define DateTrigID         2006
 #define DateListID         2007
-#define WarningAlert   3000
+#define WarningAlert       3000
 
 /* State */
 typedef struct {
@@ -23,6 +29,12 @@ typedef struct {
     UInt16 selectedApp;   /* index into appNames */
     UInt16 selectedDate;  /* 0=All, 1=Last24h, 2=Last7d */
     MemHandle textH;      /* text for the field */
+
+    /* Programmatic scrollbar */
+    ScrollBarType sb;
+    RectangleType sbBounds;
+    Boolean sbInited;
+    UInt16 sbLastValue;
 } ViewerState;
 
 static ViewerState G;
@@ -33,6 +45,8 @@ static Boolean AppHandleEvent(EventType* e);
 static void    AppEventLoop(void);
 static Err     AppStart(void);
 static void    AppStop(void);
+
+/* ------- Utilities & data collection ------- */
 
 static void FreeAppNames(void) {
     UInt16 i;
@@ -115,8 +129,9 @@ static void BuildAppList(void) {
     /* Populate UI list */
     lst = (ListType*)FrmGetObjectPtr(FrmGetActiveForm(),
                                      FrmGetObjectIndex(FrmGetActiveForm(), AppListID));
-    LstSetListChoices(lst, (Char**)G.appNames, G.appCount);
-    LstSetSelection(lst, G.selectedApp);
+    /* LstSetListChoices expects Char** */
+    LstSetListChoices(lst, (Char**)G.appNames, (Int16)G.appCount);
+    LstSetSelection(lst, (Int16)G.selectedApp);
 
     /* Update trigger label */
     trig = (ControlType*)FrmGetObjectPtr(FrmGetActiveForm(),
@@ -156,7 +171,7 @@ static void BufAppend(BuildBuf* bb, const Char* s) {
     /* ensure capacity */
     need = (UInt16)(bb->len + add + 1);
     if (!bb->bufH) {
-        bb->bufH = MemHandleNew(need + 256);
+        bb->bufH = MemHandleNew((UInt32)need + 256);
         if (!bb->bufH) return;
         p = MemHandleLock(bb->bufH);
         p[0] = 0;
@@ -167,7 +182,7 @@ static void BufAppend(BuildBuf* bb, const Char* s) {
     if (need >= cap) {
         /* grow */
         MemHandleUnlock(bb->bufH);
-        if (MemHandleResize(bb->bufH, need + 256) != 0) return;
+        if (MemHandleResize(bb->bufH, (UInt32)need + 256) != 0) return;
         p = MemHandleLock(bb->bufH);
     }
     /* append */
@@ -198,24 +213,105 @@ static Boolean EnumBuildTextCB(UInt32 ts, const Char* app, const Char* msg, void
     return true; /* continue */
 }
 
+/* ------- Programmatic scrollbar helpers ------- */
+
+/* Adjust this rectangle to match where you want the scrollbar drawn in your form.
+   These coordinates match earlier examples: field at (6,50,130,82) so bar at x=138. */
+static void SB_SetBoundsDefault(void) {
+    RectangleType r;
+
+    r.topLeft.x = 138;
+    r.topLeft.y = 50;
+    r.extent.x  = 10;
+    r.extent.y  = 82;
+    G.sbBounds = r;
+}
+
+static void SB_Init(void) {
+    UInt16 value;
+    UInt16 min;
+    UInt16 max;
+    UInt16 pageSize;
+
+    if (G.sbInited) return;
+
+    SB_SetBoundsDefault();
+    /* Initialize scrollbar structure and draw it */
+    SclCreateScrollBar(&G.sb, LogScrollBarID, &G.sbBounds, 0, 0, 0, 1);
+    SclDrawScrollBar(&G.sb);
+
+    /* Track last value to compute delta when user drags */
+    value = 0; min = 0; max = 0; pageSize = 1;
+    SclGetScrollBar(&G.sb, &value, &min, &max, &pageSize);
+    G.sbLastValue = value;
+
+    G.sbInited = true;
+}
+
+/* Recompute scrollbar range/position from the field content and redraw it. */
 static void UpdateScrollBar(void) {
     FormType* frm;
     FieldType* fld;
-    ScrollBarType* sb;
-    UInt16 max;
     UInt16 pos;
+    UInt16 max;
     UInt16 pageSize;
+
+    if (!G.sbInited) return;
 
     frm = FrmGetActiveForm();
     fld = (FieldType*)FrmGetObjectPtr(frm, FrmGetObjectIndex(frm, LogFieldID));
-    sb  = (ScrollBarType*)FrmGetObjectPtr(frm, FrmGetObjectIndex(frm, LogScrollBarID));
 
     max = 0;
     pos = 0;
     pageSize = 0;
     FldGetScrollValues(fld, &pos, &max, &pageSize);
-    SclSetScrollBar(sb, pos, 0, max, pageSize);
+
+    /* Ensure pageSize is at least 1 to keep the thumb visible */
+    if (pageSize == 0) pageSize = 1;
+
+    SclSetScrollBar(&G.sb, pos, 0, max, pageSize);
+    SclDrawScrollBar(&G.sb);
+    G.sbLastValue = pos;
 }
+
+/* When user manipulates the scrollbar, scroll the field accordingly. */
+static Boolean SB_HandleEvent(EventType* e) {
+    FormType* frm;
+    FieldType* fld;
+    UInt16 value;
+    UInt16 min;
+    UInt16 max;
+    UInt16 pageSize;
+    UInt16 curPos;
+
+    /* Let the scrollbar consume pen events etc. If it returns true,
+       its internal value may have changed. */
+    if (!SclHandleEvent(&G.sb, e)) return false;
+
+    frm = FrmGetActiveForm();
+    fld = (FieldType*)FrmGetObjectPtr(frm, FrmGetObjectIndex(frm, LogFieldID));
+
+    /* Current field pos */
+    curPos = 0;
+    max = 0;
+    pageSize = 0;
+    FldGetScrollValues(fld, &curPos, &max, &pageSize);
+
+    /* New scrollbar value */
+    value = 0; min = 0; max = 0; pageSize = 1;
+    SclGetScrollBar(&G.sb, &value, &min, &max, &pageSize);
+
+    if (value > curPos) {
+        FldScrollField(fld, (UInt16)(value - curPos), winDown);
+    } else if (value < curPos) {
+        FldScrollField(fld, (UInt16)(curPos - value), winUp);
+    }
+
+    UpdateScrollBar();
+    return true;
+}
+
+/* ------- UI composition ------- */
 
 static void LoadAndShowLogs(void) {
     BuildBuf bb;
@@ -262,7 +358,7 @@ static void InitDateList(void) {
                                      FrmGetObjectIndex(FrmGetActiveForm(), DateListID));
     LstSetListChoices(lst, kDates, 3);
     if (G.selectedDate > 2) G.selectedDate = 0;
-    LstSetSelection(lst, G.selectedDate);
+    LstSetSelection(lst, (Int16)G.selectedDate);
 
     trig = (ControlType*)FrmGetObjectPtr(FrmGetActiveForm(),
                                          FrmGetObjectIndex(FrmGetActiveForm(), DateTrigID));
@@ -283,18 +379,35 @@ static void ScrollLines(Int16 delta) {
     UpdateScrollBar();
 }
 
+/* ------- Event handling ------- */
+
 static Boolean ViewerFormHandleEvent(EventType* e) {
     Boolean handled;
     FormType* frm;
 
     handled = false;
+
+    /* First, let our programmatic scrollbar try to handle the event */
+    if (G.sbInited) {
+        if (SB_HandleEvent(e)) {
+            return true;
+        }
+    }
+
     switch (e->eType) {
     case frmOpenEvent: {
         frm = FrmGetActiveForm();
         FrmDrawForm(frm);
+
+        /* Build UI */
         BuildAppList();
         InitDateList();
         LoadAndShowLogs();
+
+        /* Init programmatic scrollbar LAST (bounds rely on drawn form) */
+        SB_Init();
+        UpdateScrollBar();
+
         handled = true;
         break;
     }
@@ -306,33 +419,6 @@ static Boolean ViewerFormHandleEvent(EventType* e) {
                 BuildAppList();
                 LoadAndShowLogs();
             }
-            handled = true;
-        }
-        break;
-    }
-
-    case sclRepeatEvent: {
-        if (e->data.sclRepeat.scrollBarID == LogScrollBarID) {
-            FormType* frm2;
-            FieldType* fld;
-            UInt16 newValue;
-            UInt16 curPos;
-            UInt16 max;
-            UInt16 page;
-
-            frm2 = FrmGetActiveForm();
-            fld = (FieldType*)FrmGetObjectPtr(frm2, FrmGetObjectIndex(frm2, LogFieldID));
-            newValue = e->data.sclRepeat.newValue;
-            curPos = 0;
-            max = 0;
-            page = 0;
-            FldGetScrollValues(fld, &curPos, &max, &page);
-            if (newValue > curPos) {
-                FldScrollField(fld, (UInt16)(newValue - curPos), winDown);
-            } else if (newValue < curPos) {
-                FldScrollField(fld, (UInt16)(curPos - newValue), winUp);
-            }
-            UpdateScrollBar();
             handled = true;
         }
         break;
@@ -363,12 +449,11 @@ static Boolean ViewerFormHandleEvent(EventType* e) {
 
     case popSelectEvent: {
         if (e->data.popSelect.listID == AppListID) {
-            G.selectedApp = e->data.popSelect.selection;
-            /* Update trigger label already done by OS, but rebuild view: */
+            G.selectedApp = (UInt16)e->data.popSelect.selection;
             LoadAndShowLogs();
             handled = true;
         } else if (e->data.popSelect.listID == DateListID) {
-            G.selectedDate = e->data.popSelect.selection; /* 0..2 */
+            G.selectedDate = (UInt16)e->data.popSelect.selection; /* 0..2 */
             LoadAndShowLogs();
             handled = true;
         }
@@ -393,6 +478,8 @@ static Boolean ViewerFormHandleEvent(EventType* e) {
     return handled;
 }
 
+/* ------- App plumbing ------- */
+
 static Boolean AppHandleEvent(EventType* e) {
     if (e->eType == frmLoadEvent) {
         UInt16 formID;
@@ -414,6 +501,9 @@ static Boolean AppHandleEvent(EventType* e) {
 
 static Err AppStart(void) {
     MemSet(&G, sizeof(G), 0);
+    G.sbInited = false;
+    G.sbLastValue = 0;
+    SB_SetBoundsDefault();
     return errNone;
 }
 
