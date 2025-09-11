@@ -1,5 +1,9 @@
 /* LogViewerApp.c */
 #include <PalmOS.h>
+#include <Form.h>
+#include <Field.h>
+#include <List.h>
+#include <ScrollBar.h>
 #include "LogDB.h"
 
 #define appFileCreator 'LvAp'
@@ -14,6 +18,7 @@
 #define AppListID          2005
 #define DateTrigID         2006
 #define DateListID         2007
+#define WarningAlert   3000
 
 /* State */
 typedef struct {
@@ -114,7 +119,7 @@ static void BuildAppList(void) {
     /* Populate UI list */
     lst = (ListType*)FrmGetObjectPtr(FrmGetActiveForm(),
                                      FrmGetObjectIndex(FrmGetActiveForm(), AppListID));
-    LstSetListChoices(lst, (const Char**)G.appNames, G.appCount);
+    LstSetListChoices(lst, (Char**)G.appNames, G.appCount);
     LstSetSelection(lst, G.selectedApp);
 
     /* Update trigger label */
@@ -255,7 +260,7 @@ static void LoadAndShowLogs(void) {
 }
 
 static void InitDateList(void) {
-    static const Char* kDates[] = { "All time", "Last 24h", "Last 7 days" };
+    static Char* kDates[] = { "All time", "Last 24h", "Last 7 days" };
     ListType* lst;
     ControlType* trig;
 

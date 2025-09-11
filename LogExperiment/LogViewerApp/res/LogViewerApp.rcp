@@ -1,42 +1,48 @@
-// LogViewerApp.rcp
+/* LogViewerApp.rcp */
 
-FORM ID 2000 AT (2 14 156 142)
+#define ViewerFormID    2000
+#define LogFieldID      2001
+#define LogScrollBarID  2002
+#define ClearButtonID   2003
+#define AppTrigID       2004
+#define AppListID       2005
+#define DateTrigID      2006
+#define DateListID      2007
+#define WarningAlert    3000
+
+FORM ID ViewerFormID AT (2 14 156 142)
 BEGIN
     TITLE "LogViewer"
-    // App filter (popup)
+
+    /* App filter (popup) */
     LABEL "App:" AT (6 18)
-    POPUPTRIGGER "All apps" ID 2004 AT (28 16 70 12) LIST 2005
-    LIST ID 2005 AT (28 28 100 60) VISIBLE 5
+    POPUPTRIGGER "All apps" ID AppTrigID AT (28 16 70 12) LIST AppListID
+    LIST ID AppListID AT (28 28 100 60) VISIBLEITEMS 5
 
-    // Date filter (popup)
+    /* Date filter (popup) */
     LABEL "Date:" AT (100 18)
-    POPUPTRIGGER "All time" ID 2006 AT (125 16 60 12) LIST 2007
-    LIST ID 2007 AT (125 28 60 45) VISIBLE 3
+    POPUPTRIGGER "All time" ID DateTrigID AT (125 16 60 12) LIST DateListID
+    LIST ID DateListID AT (125 28 60 45) VISIBLEITEMS 3
 
-    // Clear button
-    BUTTON "Clear Log" ID 2003 AT (50 34 56 12)
+    /* Clear button */
+    BUTTON "Clear Log" ID ClearButtonID AT (50 34 56 12)
 
-    // Log field + scrollbar
-    FIELD ID 2001 AT (6 50 130 82)
+    /* Log field + scrollbar */
+    FIELD ID LogFieldID AT (6 50 130 82)
         UNDERLINED 0
         MULTIPLELINES
-        EDITABLE 0
         USABLE 1
         DYNAMIC_SIZE
         AUTO_SHIFT
         AUTO_SCROLL
     END
-    SCROLLBAR ID 2002 AT (138 50 10 82)
+    SCROLLBAR ID LogScrollBarID AT (138 50 10 82)
 END
 
-// Simple alert resource used for confirmation (OK cancels, 0 index used in code)
-ALRT ID 3000
-    DEFAULTBUTTON 0
-    TIMEOUT 0
+/* Confirmation alert used by FrmCustomAlert(WarningAlert, ...) */
+ALERT ID WarningAlert
+BEGIN
     TITLE "Confirm"
     MESSAGE "Clear all logs?"
-    BUTTONS "OK", "Cancel"
+    BUTTONS "OK" "Cancel"
 END
-
-// Map the numeric id to a symbol in code
-// (If you prefer FrmCustomAlert, you can leave as is)
