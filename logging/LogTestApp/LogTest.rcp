@@ -3,8 +3,8 @@
 APPLICATIONICONNAME ID 1 "LogTestApp"
 VERSION ID 1 "1.0"
 
-FORM ID LogTestFormID AT (2 18 156 140)  /* leave room for silkscreen area */
-  USABLE
+FORM ID LogTestFormID AT (0 0 160 160)  /* leave room for silkscreen area */
+  USABLE DEFAULTBTNID LogTestBtnHelloID
 BEGIN
   TITLE "LogTestApp"
   BUTTON "Hello" ID LogTestBtnHelloID AT (CENTER 60 AUTO AUTO) USABLE
