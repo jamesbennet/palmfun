@@ -16,3 +16,5 @@ END
 
 /* App signature inside resources (recommended by Palm tooling) */
 APPLICATION ID 1 "LTst"
+CATEGORIES "Unfiled"
+LAUNCHERCATEGORY "Unfiled"
