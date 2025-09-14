@@ -11,15 +11,18 @@ static Err LogDB_OpenOrCreate(void)
 
     /* Try open by Type/Creator first */
     sLogDB = DmOpenDatabaseByTypeCreator(LOGDB_TYPE, LOGDB_CREATOR, mode);
-    if (sLogDB != NULL) return errNone;
+    if (sLogDB != NULL)
+        return errNone;
 
     /* Create if missing (ignore 'already exists') */
     err = DmCreateDatabase(0, LOGDB_NAME, LOGDB_CREATOR, LOGDB_TYPE, false);
-    if (err != errNone && err != dmErrAlreadyExists) return err;
+    if (err != errNone && err != dmErrAlreadyExists)
+        return err;
 
     /* Look up the DB ID */
     dbID = DmFindDatabase(0, LOGDB_NAME);
-    if (dbID == 0) {
+    if (dbID == 0)
+    {
         /* Return the system’s last error if lookup failed */
         return DmGetLastErr();
     }
@@ -43,7 +46,8 @@ static Err LogDB_OpenOrCreate(void)
 
     /* Open RW */
     sLogDB = DmOpenDatabase(0, dbID, mode);
-    if (sLogDB == NULL) return dmErrCantOpen;
+    if (sLogDB == NULL)
+        return dmErrCantOpen;
 
     return errNone;
 }
@@ -53,10 +57,12 @@ Err LogDB_Init(const Char *appName)
     Err err;
     UInt16 n;
 
-    if (appName == NULL) return dmErrInvalidParam;
+    if (appName == NULL)
+        return dmErrInvalidParam;
 
     n = StrLen(appName);
-    if (n >= sizeof(sAppName)) n = sizeof(sAppName) - 1;
+    if (n >= sizeof(sAppName))
+        n = sizeof(sAppName) - 1;
     MemMove(sAppName, appName, n);
     sAppName[n] = 0;
 
@@ -66,7 +72,8 @@ Err LogDB_Init(const Char *appName)
 
 void LogDB_Close(void)
 {
-    if (sLogDB != NULL) {
+    if (sLogDB != NULL)
+    {
         DmCloseDatabase(sLogDB);
         sLogDB = NULL;
     }
@@ -82,12 +89,15 @@ Err LogDB_Log(const Char *message)
     UInt32 size;
     UInt16 appLen, msgLen;
 
-    if (sLogDB == NULL) {
+    if (sLogDB == NULL)
+    {
         err = LogDB_OpenOrCreate();
-        if (err != errNone) return err;
+        if (err != errNone)
+            return err;
     }
 
-    if (message == NULL) message = "";
+    if (message == NULL)
+        message = "";
 
     secs = TimGetSeconds();
 
@@ -96,10 +106,12 @@ Err LogDB_Log(const Char *message)
     size = 4 + (UInt32)appLen + 1 + (UInt32)msgLen + 1;
 
     h = DmNewRecord(sLogDB, &index, size);
-    if (h == NULL) return dmErrMemError;
+    if (h == NULL)
+        return dmErrMemError;
 
     dst = (Char *)MemHandleLock(h);
-    if (dst == NULL) {
+    if (dst == NULL)
+    {
         DmRemoveRecord(sLogDB, index);
         return dmErrMemError;
     }
@@ -120,14 +132,18 @@ Err LogDB_ClearAll(void)
     Err err;
     UInt16 n, i;
 
-    if (sLogDB == NULL) {
+    if (sLogDB == NULL)
+    {
         err = LogDB_OpenOrCreate();
-        if (err != errNone) return err;
+        if (err != errNone)
+            return err;
     }
 
     n = DmNumRecords(sLogDB);
-    for (i = 0; i < n; i++) {
-        if (DmRemoveRecord(sLogDB, 0) != errNone) break;
+    for (i = 0; i < n; i++)
+    {
+        if (DmRemoveRecord(sLogDB, 0) != errNone)
+            break;
     }
     return errNone;
 }
@@ -136,10 +152,12 @@ Err LogDB_ClearAll(void)
 
 Err LogDB_IterBegin(LogDB_Iter *it)
 {
-    if (it == NULL) return dmErrInvalidParam;
+    if (it == NULL)
+        return dmErrInvalidParam;
     MemSet(it, sizeof(LogDB_Iter), 0);
     it->dbR = DmOpenDatabaseByTypeCreator(LOGDB_TYPE, LOGDB_CREATOR, dmModeReadOnly);
-    if (it->dbR == NULL) return dmErrCantOpen;
+    if (it->dbR == NULL)
+        return dmErrCantOpen;
     it->count = DmNumRecords(it->dbR);
     it->index = 0;
     return errNone;
@@ -151,38 +169,47 @@ MemHandle LogDB_IterNext(LogDB_Iter *it, UInt32 *seconds, Char **appPtr, Char **
     Char *p;
     UInt16 len;
 
-    if (it == NULL || it->dbR == NULL) return NULL;
-    if (it->index >= it->count) return NULL;
+    if (it == NULL || it->dbR == NULL)
+        return NULL;
+    if (it->index >= it->count)
+        return NULL;
 
     h = DmQueryRecord(it->dbR, it->index);
     it->index++;
-    if (h == NULL) return NULL;
+    if (h == NULL)
+        return NULL;
 
     p = (Char *)MemHandleLock(h);
-    if (p == NULL) return NULL;
+    if (p == NULL)
+        return NULL;
 
-    if (seconds != NULL) {
+    if (seconds != NULL)
+    {
         *seconds = *(UInt32 *)(p);
     }
     p += 4;
 
-    if (appPtr != NULL) *appPtr = p;
+    if (appPtr != NULL)
+        *appPtr = p;
     len = (UInt16)StrLen(p);
     p += (UInt32)len + 1;
 
-    if (msgPtr != NULL) *msgPtr = p;
+    if (msgPtr != NULL)
+        *msgPtr = p;
 
     return h;
 }
 
 void LogDB_IterUnlock(MemHandle h)
 {
-    if (h != NULL) MemHandleUnlock(h);
+    if (h != NULL)
+        MemHandleUnlock(h);
 }
 
 void LogDB_IterEnd(LogDB_Iter *it)
 {
-    if (it != NULL && it->dbR != NULL) {
+    if (it != NULL && it->dbR != NULL)
+    {
         DmCloseDatabase(it->dbR);
         it->dbR = NULL;
     }

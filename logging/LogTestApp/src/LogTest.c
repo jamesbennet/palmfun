@@ -13,9 +13,11 @@ UInt32 PilotMain(UInt16 cmd, MemPtr cmdPBP, UInt16 launchFlags)
 {
     Err err;
 
-    if (cmd == sysAppLaunchCmdNormalLaunch) {
+    if (cmd == sysAppLaunchCmdNormalLaunch)
+    {
         err = AppStart();
-        if (err) return err;
+        if (err)
+            return err;
         AppEventLoop();
         AppStop();
     }
@@ -50,7 +52,8 @@ static void AppEventLoop(void)
     /* Open the main form the usual way */
     FrmGotoForm(LogTestFormID);
 
-    do {
+    do
+    {
         EvtGetEvent(&event, evtWaitForever);
 
         if (!SysHandleEvent(&event))
@@ -63,12 +66,14 @@ static void AppEventLoop(void)
 
 static Boolean AppHandleEvent(EventType *eventP)
 {
-    if (eventP->eType == frmLoadEvent) {
+    if (eventP->eType == frmLoadEvent)
+    {
         UInt16 formId;
         FormType *frmP;
 
         formId = eventP->data.frmLoad.formID;
-        if (formId == LogTestFormID) {
+        if (formId == LogTestFormID)
+        {
             frmP = FrmInitForm(formId);
             FrmSetActiveForm(frmP);
             FrmSetEventHandler(frmP, MainFormHandleEvent);
@@ -82,9 +87,11 @@ static Boolean MainFormHandleEvent(EventType *eventP)
 {
     Boolean handled = false;
 
-    switch (eventP->eType) {
+    switch (eventP->eType)
+    {
     case ctlSelectEvent:
-        if (eventP->data.ctlSelect.controlID == LogTestBtnHelloID) {
+        if (eventP->data.ctlSelect.controlID == LogTestBtnHelloID)
+        {
             /* Write a log line */
             LogDB_Log("Button Clicked");
             SndPlaySystemSound(sndClick);

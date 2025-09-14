@@ -4,9 +4,9 @@
 #include <PalmOS.h>
 
 /* Shared Debug Log database constants */
-#define LOGDB_NAME      "DebugLog"
-#define LOGDB_TYPE      'DATA'
-#define LOGDB_CREATOR   'LgDB'
+#define LOGDB_NAME "DebugLog"
+#define LOGDB_TYPE 'DATA'
+#define LOGDB_CREATOR 'LgDB'
 
 /* Initialize (open-or-create) the log DB and set the current app name. */
 Err LogDB_Init(const Char *appName);
@@ -21,10 +21,11 @@ Err LogDB_Log(const Char *message);
 Err LogDB_ClearAll(void);
 
 /* Lightweight reader helpers for the viewer */
-typedef struct LogDB_IterTag {
+typedef struct LogDB_IterTag
+{
     DmOpenRef dbR;
-    UInt16    index;
-    UInt16    count;
+    UInt16 index;
+    UInt16 count;
 } LogDB_Iter;
 
 /* Begin iteration over all records (returns errNone or dmErrCantOpen). */

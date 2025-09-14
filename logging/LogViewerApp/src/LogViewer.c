@@ -4,21 +4,23 @@
 
 /* --- Model for the on-screen text buffer --- */
 
-typedef struct {
+typedef struct
+{
     UInt32 seconds;
-    Char  *app;   /* owned copies */
-    Char  *msg;   /* owned copies */
+    Char *app; /* owned copies */
+    Char *msg; /* owned copies */
 } Item;
 
-typedef struct {
+typedef struct
+{
     Item *items;
     UInt16 count;
 } ItemList;
 
-static MemHandle sTextH = NULL;      /* Field text handle */
-static Char **sAppChoices = NULL;    /* dynamic app names array for list */
+static MemHandle sTextH = NULL;   /* Field text handle */
+static Char **sAppChoices = NULL; /* dynamic app names array for list */
 static UInt16 sAppChoiceCount = 0;
-static UInt16 sSelectedApp = 0;      /* index in sAppChoices (0 == "All") */
+static UInt16 sSelectedApp = 0; /* index in sAppChoices (0 == "All") */
 static UInt16 sSelectedTime = TF_All;
 
 static void Viewer_BuildAppChoices(void);
@@ -40,8 +42,11 @@ static void FormatDateTime(Char *dst, UInt32 secs)
     DateTimeType dt;
     UInt16 y, mo, d, h, mi;
     TimSecondsToDateTime(secs, &dt);
-    y = dt.year; mo = dt.month; d = dt.day;
-    h = dt.hour; mi = dt.minute;
+    y = dt.year;
+    mo = dt.month;
+    d = dt.day;
+    h = dt.hour;
+    mi = dt.minute;
     StrPrintF(dst, "%04d-%02d-%02d %02d:%02d", (Int16)y, (Int16)mo, (Int16)d, (Int16)h, (Int16)mi);
 }
 
@@ -51,26 +56,30 @@ static Boolean TimeFilter_Passes(UInt32 nowSecs, UInt32 recSecs)
     DateTimeType now;
     DateTimeType rec;
 
-    switch (sSelectedTime) {
+    switch (sSelectedTime)
+    {
     case TF_All:
         return true;
 
     case TF_LastHour:
-        if (nowSecs >= recSecs) {
+        if (nowSecs >= recSecs)
+        {
             delta = nowSecs - recSecs;
             return (delta <= 60UL * 60UL);
         }
         return false;
 
     case TF_Last24h:
-        if (nowSecs >= recSecs) {
+        if (nowSecs >= recSecs)
+        {
             delta = nowSecs - recSecs;
             return (delta <= 24UL * 60UL * 60UL);
         }
         return false;
 
     case TF_Last7d:
-        if (nowSecs >= recSecs) {
+        if (nowSecs >= recSecs)
+        {
             delta = nowSecs - recSecs;
             return (delta <= 7UL * 24UL * 60UL * 60UL);
         }
@@ -92,8 +101,10 @@ static int CmpItemsDesc(const void *a, const void *b)
 {
     const Item *ia = (const Item *)a;
     const Item *ib = (const Item *)b;
-    if (ia->seconds < ib->seconds) return 1;
-    if (ia->seconds > ib->seconds) return -1;
+    if (ia->seconds < ib->seconds)
+        return 1;
+    if (ia->seconds > ib->seconds)
+        return -1;
     return 0;
 }
 
@@ -117,26 +128,33 @@ static void Viewer_BuildAppChoices(void)
         Char *names[MAX_APPS];
         UInt16 counts;
 
-        for (i = 0; i < MAX_APPS; i++) names[i] = NULL;
+        for (i = 0; i < MAX_APPS; i++)
+            names[i] = NULL;
         counts = 0;
 
         e = LogDB_IterBegin(&it);
-        if (e == errNone) {
-            while ((h = LogDB_IterNext(&it, &secs, &app, &msg)) != NULL) {
+        if (e == errNone)
+        {
+            while ((h = LogDB_IterNext(&it, &secs, &app, &msg)) != NULL)
+            {
                 Boolean found;
                 found = false;
-                for (i = 0; i < counts; i++) {
-                    if (StrCompare(names[i], app) == 0) {
+                for (i = 0; i < counts; i++)
+                {
+                    if (StrCompare(names[i], app) == 0)
+                    {
                         found = true;
                         break;
                     }
                 }
-                if (!found && counts < MAX_APPS) {
+                if (!found && counts < MAX_APPS)
+                {
                     UInt16 len;
                     Char *copy;
                     len = (UInt16)StrLen(app);
                     copy = (Char *)MemPtrNew(len + 1);
-                    if (copy != NULL) {
+                    if (copy != NULL)
+                    {
                         MemMove(copy, app, len + 1);
                         names[counts++] = copy;
                     }
@@ -147,12 +165,14 @@ static void Viewer_BuildAppChoices(void)
         }
 
         sAppChoices = (Char **)MemPtrNew((counts + 1) * sizeof(Char *));
-        if (sAppChoices == NULL) {
+        if (sAppChoices == NULL)
+        {
             sAppChoiceCount = 0;
             return;
         }
         sAppChoices[0] = "All";
-        for (i = 0; i < counts; i++) {
+        for (i = 0; i < counts; i++)
+        {
             sAppChoices[i + 1] = names[i];
         }
         sAppChoiceCount = counts + 1;
@@ -177,9 +197,12 @@ static void Viewer_BuildAppChoices(void)
 static void Viewer_FreeAppChoices(void)
 {
     UInt16 i;
-    if (sAppChoices != NULL) {
-        for (i = 1; i < sAppChoiceCount; i++) {
-            if (sAppChoices[i] != NULL) {
+    if (sAppChoices != NULL)
+    {
+        for (i = 1; i < sAppChoiceCount; i++)
+        {
+            if (sAppChoices[i] != NULL)
+            {
                 MemPtrFree(sAppChoices[i]);
             }
         }
@@ -220,7 +243,8 @@ static void Viewer_Refresh(void)
     outLen = 0;
     appFilter = NULL;
 
-    if (sSelectedApp > 0 && sAppChoices != NULL && sSelectedApp < sAppChoiceCount) {
+    if (sSelectedApp > 0 && sAppChoices != NULL && sSelectedApp < sAppChoiceCount)
+    {
         appFilter = sAppChoices[sSelectedApp];
     }
 
@@ -228,27 +252,36 @@ static void Viewer_Refresh(void)
 
     /* Collect items (COPY strings while record is locked) */
     e = LogDB_IterBegin(&it);
-    if (e == errNone) {
-        while ((h = LogDB_IterNext(&it, &secs, &app, &msg)) != NULL) {
+    if (e == errNone)
+    {
+        while ((h = LogDB_IterNext(&it, &secs, &app, &msg)) != NULL)
+        {
             Boolean ok;
             ok = true;
 
-            if (appFilter != NULL) {
-                if (StrCompare(appFilter, app) != 0) ok = false;
+            if (appFilter != NULL)
+            {
+                if (StrCompare(appFilter, app) != 0)
+                    ok = false;
             }
-            if (ok) ok = TimeFilter_Passes(nowSecs, secs);
+            if (ok)
+                ok = TimeFilter_Passes(nowSecs, secs);
 
-            if (ok) {
-                if (n == cap) {
+            if (ok)
+            {
+                if (n == cap)
+                {
                     UInt16 ncap;
                     Item *tmp;
                     ncap = (cap == 0) ? 32 : (UInt16)(cap * 2);
                     tmp = (Item *)MemPtrNew(ncap * sizeof(Item));
-                    if (tmp == NULL) {
+                    if (tmp == NULL)
+                    {
                         LogDB_IterUnlock(h);
                         break;
                     }
-                    if (arr != NULL) {
+                    if (arr != NULL)
+                    {
                         MemMove(tmp, arr, n * sizeof(Item));
                         MemPtrFree(arr);
                     }
@@ -266,9 +299,12 @@ static void Viewer_Refresh(void)
                     mlen = (UInt16)StrLen(msg);
                     ac = (Char *)MemPtrNew(alen + 1);
                     mc = (Char *)MemPtrNew(mlen + 1);
-                    if (ac == NULL || mc == NULL) {
-                        if (ac != NULL) MemPtrFree(ac);
-                        if (mc != NULL) MemPtrFree(mc);
+                    if (ac == NULL || mc == NULL)
+                    {
+                        if (ac != NULL)
+                            MemPtrFree(ac);
+                        if (mc != NULL)
+                            MemPtrFree(mc);
                         LogDB_IterUnlock(h);
                         break;
                     }
@@ -288,15 +324,18 @@ static void Viewer_Refresh(void)
     }
 
     /* Sort newest-first (insertion sort) */
-    if (arr != NULL && n > 1) {
+    if (arr != NULL && n > 1)
+    {
         UInt16 i;
-        for (i = 1; i < n; i++) {
+        for (i = 1; i < n; i++)
+        {
             Item key;
             UInt16 j;
 
             key = arr[i];
             j = i;
-            while (j > 0 && CmpItemsDesc(&arr[j - 1], &key) > 0) {
+            while (j > 0 && CmpItemsDesc(&arr[j - 1], &key) > 0)
+            {
                 arr[j] = arr[j - 1];
                 j--;
             }
@@ -307,7 +346,8 @@ static void Viewer_Refresh(void)
     /* Render into one big buffer */
     {
         UInt16 i;
-        for (i = 0; i < n; i++) {
+        for (i = 0; i < n; i++)
+        {
             UInt16 need;
             UInt16 appLen;
             UInt16 msgLen;
@@ -318,15 +358,18 @@ static void Viewer_Refresh(void)
             msgLen = (UInt16)StrLen(arr[i].msg);
             need = (UInt16)(StrLen(timeBuf) + 3 + appLen + 3 + msgLen + 1);
 
-            if (outLen + need + 1 > outCap) {
+            if (outLen + need + 1 > outCap)
+            {
                 UInt32 ncap;
                 Char *tmp;
                 ncap = (outCap == 0) ? 2048 : (outCap * 2);
                 tmp = (Char *)MemPtrNew(ncap);
-                if (tmp == NULL) {
+                if (tmp == NULL)
+                {
                     break;
                 }
-                if (outBuf != NULL) {
+                if (outBuf != NULL)
+                {
                     MemMove(tmp, outBuf, outLen);
                     MemPtrFree(outBuf);
                 }
@@ -359,15 +402,20 @@ static void Viewer_Refresh(void)
     Viewer_SetFieldText((outBuf != NULL) ? outBuf : "");
 
     /* Cleanup */
-    if (arr != NULL) {
+    if (arr != NULL)
+    {
         UInt16 i2;
-        for (i2 = 0; i2 < n; i2++) {
-            if (arr[i2].app != NULL) MemPtrFree(arr[i2].app);
-            if (arr[i2].msg != NULL) MemPtrFree(arr[i2].msg);
+        for (i2 = 0; i2 < n; i2++)
+        {
+            if (arr[i2].app != NULL)
+                MemPtrFree(arr[i2].app);
+            if (arr[i2].msg != NULL)
+                MemPtrFree(arr[i2].msg);
         }
         MemPtrFree(arr);
     }
-    if (outBuf != NULL) MemPtrFree(outBuf);
+    if (outBuf != NULL)
+        MemPtrFree(outBuf);
 }
 
 static void Viewer_SetFieldText(const Char *text)
@@ -382,14 +430,16 @@ static void Viewer_SetFieldText(const Char *text)
     len = (text != NULL) ? StrLen(text) : 0;
 
     /* Detach any existing handle from the field BEFORE freeing it */
-    if (sTextH != NULL) {
+    if (sTextH != NULL)
+    {
         FldSetTextHandle(fld, NULL);
         MemHandleFree(sTextH);
         sTextH = NULL;
     }
 
     sTextH = MemHandleNew(len + 1);
-    if (sTextH == NULL) {
+    if (sTextH == NULL)
+    {
         FldSetTextHandle(fld, NULL);
         FldDrawField(fld);
         Viewer_UpdateScrollBar(true);
@@ -397,8 +447,10 @@ static void Viewer_SetFieldText(const Char *text)
     }
 
     p = (Char *)MemHandleLock(sTextH);
-    if (p != NULL) {
-        if (len > 0) {
+    if (p != NULL)
+    {
+        if (len > 0)
+        {
             MemMove(p, text, len);
         }
         p[len] = 0;
@@ -431,14 +483,18 @@ static void Viewer_UpdateScrollBar(Boolean redraw)
     maxValue = 0;
 
     FldGetScrollValues(fld, &scrollPos, &textHeight, &fieldHeight);
-    if (textHeight > fieldHeight) {
+    if (textHeight > fieldHeight)
+    {
         maxValue = textHeight - fieldHeight;
-    } else {
+    }
+    else
+    {
         maxValue = 0;
     }
 
     SclSetScrollBar(scb, scrollPos, 0, maxValue, (fieldHeight > 0) ? (fieldHeight - 1) : 0);
-    if (redraw) {
+    if (redraw)
+    {
         FldDrawField(fld);
     }
 }
@@ -453,14 +509,17 @@ static Err AppStart(void)
 
 static void AppStop(void)
 {
-    if (sTextH != NULL) {
+    if (sTextH != NULL)
+    {
         /* Ensure field does not hold it before freeing */
         FormType *frm;
         FieldType *fld;
         frm = FrmGetActiveForm();
-        if (frm != NULL) {
+        if (frm != NULL)
+        {
             fld = (FieldType *)FrmGetObjectPtr(frm, FrmGetObjectIndex(frm, LogViewerFldID));
-            if (fld != NULL) {
+            if (fld != NULL)
+            {
                 FldSetTextHandle(fld, NULL);
             }
         }
@@ -478,22 +537,25 @@ static void AppEventLoop(void)
     /* Properly open: generates frmLoadEvent then frmOpenEvent */
     FrmGotoForm(LogViewerFormID);
 
-    do {
+    do
+    {
         EvtGetEvent(&event, evtWaitForever);
 
         if (!SysHandleEvent(&event))
-        if (!MenuHandleEvent(0, &event, &err))
-        if (!AppHandleEvent(&event))
-            FrmDispatchEvent(&event);
+            if (!MenuHandleEvent(0, &event, &err))
+                if (!AppHandleEvent(&event))
+                    FrmDispatchEvent(&event);
 
     } while (event.eType != appStopEvent);
 }
 
 UInt32 PilotMain(UInt16 cmd, MemPtr cmdPBP, UInt16 launchFlags)
 {
-    switch (cmd) {
+    switch (cmd)
+    {
     case sysAppLaunchCmdNormalLaunch:
-        if (AppStart() == errNone) {
+        if (AppStart() == errNone)
+        {
             AppEventLoop();
             AppStop();
         }
@@ -506,12 +568,14 @@ UInt32 PilotMain(UInt16 cmd, MemPtr cmdPBP, UInt16 launchFlags)
 
 static Boolean AppHandleEvent(EventType *eventP)
 {
-    if (eventP->eType == frmLoadEvent) {
+    if (eventP->eType == frmLoadEvent)
+    {
         UInt16 formId;
         FormType *frm;
 
         formId = eventP->data.frmLoad.formID;
-        if (formId == LogViewerFormID) {
+        if (formId == LogViewerFormID)
+        {
             frm = FrmInitForm(formId);
             FrmSetActiveForm(frm);
             FrmSetEventHandler(frm, MainFormHandleEvent);
@@ -526,7 +590,8 @@ static Boolean MainFormHandleEvent(EventType *eventP)
     Boolean handled;
     handled = false;
 
-    switch (eventP->eType) {
+    switch (eventP->eType)
+    {
 
     case frmOpenEvent:
     {
@@ -537,10 +602,10 @@ static Boolean MainFormHandleEvent(EventType *eventP)
         FrmDrawForm(frm);
 
         /* Make sure the big field is non-editable at runtime too (RCP should already set NONEDITABLE) */
-        //fld = (FieldType *)FrmGetObjectPtr(frm, FrmGetObjectIndex(frm, LogViewerFldID));
-        //if (fld != NULL) {
-        //    FldSetEditable(fld, false);
-        //}
+        // fld = (FieldType *)FrmGetObjectPtr(frm, FrmGetObjectIndex(frm, LogViewerFldID));
+        // if (fld != NULL) {
+        //     FldSetEditable(fld, false);
+        // }
 
         Viewer_BuildAppChoices();
         Viewer_Refresh();
@@ -549,7 +614,8 @@ static Boolean MainFormHandleEvent(EventType *eventP)
     }
 
     case ctlSelectEvent:
-        if (eventP->data.ctlSelect.controlID == LogViewerBtnClearID) {
+        if (eventP->data.ctlSelect.controlID == LogViewerBtnClearID)
+        {
             /* Clear DB and refresh */
             LogDB_ClearAll();
             Viewer_BuildAppChoices();
@@ -570,9 +636,12 @@ static Boolean MainFormHandleEvent(EventType *eventP)
         newValue = eventP->data.sclRepeat.newValue;
         value = eventP->data.sclRepeat.value;
 
-        if (newValue > value) {
+        if (newValue > value)
+        {
             FldScrollField(fld, (UInt16)(newValue - value), winDown);
-        } else if (newValue < value) {
+        }
+        else if (newValue < value)
+        {
             FldScrollField(fld, (UInt16)(value - newValue), winUp);
         }
         Viewer_UpdateScrollBar(false);
@@ -586,11 +655,14 @@ static Boolean MainFormHandleEvent(EventType *eventP)
         break;
 
     case popSelectEvent:
-        if (eventP->data.popSelect.listID == LogViewerAppListID) {
+        if (eventP->data.popSelect.listID == LogViewerAppListID)
+        {
             sSelectedApp = eventP->data.popSelect.selection;
             Viewer_Refresh();
             handled = true;
-        } else if (eventP->data.popSelect.listID == LogViewerTimeListID) {
+        }
+        else if (eventP->data.popSelect.listID == LogViewerTimeListID)
+        {
             sSelectedTime = eventP->data.popSelect.selection;
             Viewer_Refresh();
             handled = true;

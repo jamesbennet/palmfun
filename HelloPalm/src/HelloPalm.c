@@ -199,9 +199,11 @@ UInt32 PilotMain(UInt16 cmd, MemPtr cmdPBP, UInt16 launchFlags)
   if ((err = RomVersionCompatible(MinOSVersion)))
     return (err);
 
-  if (cmd == sysAppLaunchCmdNormalLaunch) {
+  if (cmd == sysAppLaunchCmdNormalLaunch)
+  {
     err = AppStart();
-    if (err) return err;
+    if (err)
+      return err;
     AppEventLoop();
     AppStop();
   }
@@ -228,7 +230,8 @@ static void AppEventLoop(void)
   /* Open the main form the usual way */
   FrmGotoForm(MainForm);
 
-  do {
+  do
+  {
     EvtGetEvent(&event, evtWaitForever);
 
     if (!SysHandleEvent(&event))
