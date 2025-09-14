@@ -1,6 +1,6 @@
 #include <PalmOS.h>
 #include "LogViewer.h"
-#include "../common/LogDB.h"
+#include "LogDB.h"
 
 /* --- Model for the on-screen text buffer --- */
 

@@ -1,5 +1,6 @@
 .idea/
 *.o
 *.ro
+*.bin
 build/
 *.prc

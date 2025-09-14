@@ -1,6 +1,6 @@
 #include <PalmOS.h>
 #include "LogTest.h"
-#include "../common/LogDB.h"
+#include "LogDB.h"
 
 /* Forward decls */
 static Boolean AppHandleEvent(EventType *eventP);

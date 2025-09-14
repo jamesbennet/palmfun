@@ -1,4 +1,4 @@
-#include "LogTest.h"
+#include "../src/LogTest.h"
 
 APPLICATIONICONNAME ID 1 "LogTestApp"
 VERSION ID 1 "1.0"

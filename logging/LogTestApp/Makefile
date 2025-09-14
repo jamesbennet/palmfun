@@ -10,7 +10,7 @@ VERSION      := 1.0
 PALM_SDK     ?= /opt/palmdev/sdk-4/include
 
 CC           := m68k-palmos-gcc
-CFLAGS       := -Os -fno-builtin -Wall -I$(PALM_SDK) -Ires -m68000 -palmos4
+CFLAGS       := -Os -fno-builtin -Wall -I$(PALM_SDK) -I../common/src -Ires -m68000 -palmos4
 LDFLAGS      := -m68000 -palmos4
 
 PILRC        := pilrc
