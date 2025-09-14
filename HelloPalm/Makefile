@@ -1,3 +1,6 @@
+# prc-tools Makefile for HelloPalm
+# Assumes pilrc and build-prc are in PATH; adjust SDK include path if needed.
+
 APPNAME      := HelloPalm
 CREATOR      := HlWd
 TYPE         := appl
