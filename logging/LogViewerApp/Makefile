@@ -23,6 +23,7 @@ OBJS := $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(SRCS)) ../common/build/LogDB.o
 TARGET := $(BUILD_DIR)/$(APPNAME)
 
 RCP          := res/LogViewer.rcp
+RCP_DIR := $(dir $(RCP))
 PRC          := $(TARGET).prc
 
 all: $(PRC)
@@ -33,7 +34,7 @@ $(BUILD_DIR):
 
 # Package PRC: code + resources
 $(BUILD_DIR)/$(APPNAME).prc: $(TARGET) $(BUILD_DIR)/$(APPNAME).ro | $(BUILD_DIR)
-	$(BUILD_PRC) -o $@ -t $(TYPE) -c $(CREATOR) -n "$(APPNAME)" $(TARGET) $(BUILD_DIR)/$(APPNAME).ro
+	$(BUILD_PRC) -o $@ -t $(TYPE) -c $(CREATOR) -n "$(APPNAME)" -v "$(VERSION)" $(TARGET) $(BUILD_DIR)/$(APPNAME).ro
 
 # Link objects into PalmOS executable
 $(TARGET): $(OBJS) | $(BUILD_DIR)

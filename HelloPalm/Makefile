@@ -56,6 +56,6 @@ $(PRC): $(TARGET) $(RSC_DIR)
 	  $(TARGET) $(RSC_DIR)/*
 
 clean:
-	rm -rf build src/*.o
+	rm -rf build
 
 .PHONY: all clean
