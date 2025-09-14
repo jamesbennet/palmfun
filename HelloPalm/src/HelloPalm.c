@@ -5,6 +5,11 @@
 // Define version 4.0 as the minimum OS version
 #define MinOSVersion sysMakeROMVersion(4, 0, 0, sysROMStageRelease, 0)
 
+/* Forward decls */
+static void AppEventLoop(void);
+static Err AppStart(void);
+static void AppStop(void);
+
 static Err RomVersionCompatible(UInt32 requiredVersion)
 {
   UInt32 romVersion;
@@ -112,7 +117,7 @@ static Boolean AppHandleEvent(EventPtr eventP)
       int NameLength;
 
       /* Write a log line */
-      // LogDB_Log("MainSubmitButton Clicked");
+      LogDB_Log("MainSubmitButton Clicked");
 
       frmP = FrmGetActiveForm();
 
@@ -189,39 +194,47 @@ static Boolean AppHandleEvent(EventPtr eventP)
 
 UInt32 PilotMain(UInt16 cmd, MemPtr cmdPBP, UInt16 launchFlags)
 {
-  EventType event;
-  Err err = 0;
+  Err err;
 
   if ((err = RomVersionCompatible(MinOSVersion)))
     return (err);
 
-  switch (cmd)
-  {
-  case sysAppLaunchCmdNormalLaunch:
-
-    // err = LogDB_Init("HelloPalm");
-    // if (err) return err;
-
-    FrmGotoForm(MainForm);
-
-    do
-    {
-      UInt16 MenuError;
-
-      EvtGetEvent(&event, evtWaitForever);
-
-      if (!SysHandleEvent(&event))
-        if (!MenuHandleEvent(0, &event, &MenuError))
-          if (!AppHandleEvent(&event))
-            FrmDispatchEvent(&event);
-
-    } while (event.eType != appStopEvent);
-    // LogDB_Close();
-    break;
-
-  default:
-    break;
+  if (cmd == sysAppLaunchCmdNormalLaunch) {
+    err = AppStart();
+    if (err) return err;
+    AppEventLoop();
+    AppStop();
   }
+  return errNone;
+}
 
-  return (err);
+static Err AppStart(void)
+{
+  Err e;
+  e = LogDB_Init("HelloPalm");
+  return e;
+}
+
+static void AppStop(void)
+{
+  LogDB_Close();
+}
+
+static void AppEventLoop(void)
+{
+  EventType event;
+  UInt16 err;
+
+  /* Open the main form the usual way */
+  FrmGotoForm(MainForm);
+
+  do {
+    EvtGetEvent(&event, evtWaitForever);
+
+    if (!SysHandleEvent(&event))
+      if (!MenuHandleEvent(0, &event, &err))
+        if (!AppHandleEvent(&event))
+          FrmDispatchEvent(&event);
+
+  } while (event.eType != appStopEvent);
 }
