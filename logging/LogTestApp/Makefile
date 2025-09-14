@@ -49,7 +49,7 @@ $(BUILD_DIR)/%.o: src/%.c | $(BUILD_DIR)
 
 # Compile resources via PilRC
 $(BUILD_DIR)/$(APPNAME).ro: $(RCP) src/LogTest.h | $(BUILD_DIR)
-	$(PILRC) -ro -name "$(APPNAME)" -type $(TYPE) -creator $(CREATOR) -o $@ $(RCP)
+	$(PILRC) -ro -I "$(abspath $(RCP_DIR))" -I "$(abspath src)" -name "$(APPNAME)" -type $(TYPE) -creator $(CREATOR) -o $@ $(RCP)
 
 clean:
 	rm -rf $(BUILD_DIR)
