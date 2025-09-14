@@ -10,7 +10,7 @@ VERSION      := 1.0
 PALM_SDK     ?= /opt/palmdev/sdk-4/include
 
 CC           := m68k-palmos-gcc
-CFLAGS       := -Os -fno-builtin -Wall -I$(PALM_SDK) -I../common/src -Ires -m68000 -palmos4
+CFLAGS       := -Os -fno-builtin -Wall -I$(PALM_SDK) -I../logging/common/src -Ires -m68000 -palmos4
 LDFLAGS      := -m68000 -palmos4
 
 PILRC        := pilrc
@@ -19,7 +19,7 @@ BUILD_PRC    := build-prc
 BUILD_DIR    := build
 # Auto-pick all .c files under src/
 SRCS := $(wildcard src/*.c)
-OBJS := $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(SRCS)) ../common/$(BUILD_DIR)/LogDB.o
+OBJS := $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(SRCS)) ../logging/common/$(BUILD_DIR)/LogDB.o
 TARGET := $(BUILD_DIR)/$(APPNAME)
 
 RCP          := res/HelloPalm.rcp
@@ -44,8 +44,8 @@ $(TARGET): $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $^ -lPalmOSGlue
 
 # Build shared object via common/Makefile
-../common/$(BUILD_DIR)/LogDB.o:
-	$(MAKE) -C ../common
+../logging/common/$(BUILD_DIR)/LogDB.o:
+	$(MAKE) -C ../logging/common
 
 # Compile resources via PilRC → .bin files in RSC_DIR
 $(RSC_DIR): $(RCP)
@@ -61,6 +61,6 @@ $(PRC): $(TARGET) $(RSC_DIR)
 
 clean:
 	rm -rf $(BUILD_DIR)
-	$(MAKE) -C ../common clean
+	$(MAKE) -C ../logging/common clean
 
 .PHONY: all clean
