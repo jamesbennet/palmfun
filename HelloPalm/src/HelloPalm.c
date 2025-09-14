@@ -217,14 +217,12 @@ UInt32 PilotMain(UInt16 cmd, MemPtr cmdPBP, UInt16 launchFlags)
                    FrmDispatchEvent(&event);
 
            } while (event.eType != appStopEvent);
-
+         LogDB_Close();
          break;
 
 	   default:
          break;
      }
-
-  LogDB_Close();
 
    return(err);
  }
