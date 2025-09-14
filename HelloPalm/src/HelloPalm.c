@@ -197,13 +197,13 @@ UInt32 PilotMain(UInt16 cmd, MemPtr cmdPBP, UInt16 launchFlags)
   if ((err = RomVersionCompatible(MinOSVersion)))
     return(err);
 
-  err = LogDB_Init("HelloPalm");
-  if (err) return err;
-
    switch (cmd)
      {
        case sysAppLaunchCmdNormalLaunch:
-	
+
+         err = LogDB_Init("HelloPalm");
+         if (err) return err;
+
          FrmGotoForm(MainForm);
 			
            do {
