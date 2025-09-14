@@ -1,3 +1,7 @@
+/*
+	File Name  : LogViewer.rcp
+*/
+
 #include "../src/LogViewer.h"
 
 APPLICATIONICONNAME ID 1 "LogViewerApp"

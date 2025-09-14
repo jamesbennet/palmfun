@@ -1,3 +1,7 @@
+/*
+	File Name  : LogTest.rcp
+*/
+
 #include "../src/LogTest.h"
 
 APPLICATIONICONNAME ID 1 "LogTestApp"

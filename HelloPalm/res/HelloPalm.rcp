@@ -4,8 +4,12 @@
 
 #include "../src/HelloPalm.h"
 
+APPLICATIONICONNAME ID 1 "HelloPalm"
+VERSION ID 1 "1.0"
+
 FORM ID MainForm AT (0 0 160 160)
 USABLE
+DEFAULTBTNID MainSubmitButton
 NOSAVEBEHIND
 MENUID MainMenuBar
 BEGIN
@@ -24,6 +28,7 @@ END
 
 FORM ID AboutForm AT (0 0 160 160)
 USABLE
+DEFAULTBTNID AboutOKButton
 SAVEBEHIND
 BEGIN
     TITLE "About"
@@ -45,6 +50,7 @@ END
 
 FORM ID ROMMsgForm AT (0 0 160 160)
 USABLE
+DEFAULTBTNID ROMMsgOKButton
 NOSAVEBEHIND
 BEGIN
     TITLE "Invalid ROM Version"
@@ -83,3 +89,5 @@ BEGIN
     MESSAGE "Applications display warning alerts to provide you with a chance to prevent an error"
     BUTTONS "Got It!" "Understand"
 END
+
+APPLICATION ID 1 "HlWd"
