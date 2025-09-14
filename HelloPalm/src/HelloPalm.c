@@ -1,5 +1,6 @@
 #include <PalmOS.h>
 #include "HelloPalm.h"
+#include "LogDB.h"
 
 // Define version 4.0 as the minimum OS version
 #define MinOSVersion	sysMakeROMVersion(4,0,0,sysROMStageRelease,0)
@@ -105,6 +106,10 @@ static Boolean AppHandleEvent(EventPtr eventP)
          }
        else if (eventP->data.ctlSelect.controlID == MainSubmitButton)
          {
+
+         /* Write a log line */
+         LogDB_Log("MainSubmitButton Clicked");
+
         ControlType *One,*Two;
         FieldPtr TextFieldPtr;
         char Name[128];
@@ -191,7 +196,10 @@ UInt32 PilotMain(UInt16 cmd, MemPtr cmdPBP, UInt16 launchFlags)
 
   if ((err = RomVersionCompatible(MinOSVersion)))
     return(err);
-  
+
+  err = LogDB_Init("HelloPalm");
+  if (err) return err;
+
    switch (cmd)
      {
        case sysAppLaunchCmdNormalLaunch:
@@ -209,13 +217,15 @@ UInt32 PilotMain(UInt16 cmd, MemPtr cmdPBP, UInt16 launchFlags)
                    FrmDispatchEvent(&event);
 
            } while (event.eType != appStopEvent);
-			
+
          break;
 
 	   default:
          break;
      }
-	
+
+  LogDB_Close();
+
    return(err);
  }
 

@@ -19,7 +19,7 @@ BUILD_PRC    := build-prc
 BUILD_DIR    := build
 # Auto-pick all .c files under src/
 SRCS := $(wildcard src/*.c)
-OBJS := $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(SRCS)) ../common/build/LogDB.o
+OBJS := $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(SRCS)) ../common/$(BUILD_DIR)/LogDB.o
 TARGET := $(BUILD_DIR)/$(APPNAME)
 
 RCP          := res/LogTest.rcp
@@ -45,7 +45,7 @@ $(BUILD_DIR)/%.o: src/%.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Build shared object via common/Makefile
-../common/build/LogDB.o:
+../common/$(BUILD_DIR)/LogDB.o:
 	$(MAKE) -C ../common
 
 # Compile resources via PilRC
