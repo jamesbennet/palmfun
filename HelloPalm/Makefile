@@ -33,15 +33,15 @@ all: $(PRC)
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-# Generic compile rule for any source in src/
-src/%.o: src/%.c
-	@mkdir -p $(dir $@)
+# Generic compile rule for any source in src/ -> object in build/
+$(BUILD_DIR)/%.o: src/%.c
+	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Link objects into PalmOS executable
 $(TARGET): $(OBJS)
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -o $@ $^ -lPalmOSGlue
+	@mkdir -p $(@D)
+	$(CC) $(LDFLAGS) -o $@ $^ -lPalmOSGlue
 
 # Compile resources via PilRC → .bin files in RSC_DIR
 $(RSC_DIR): $(RCP)
@@ -50,7 +50,7 @@ $(RSC_DIR): $(RCP)
 
 # Package PRC: code + resources
 $(PRC): $(TARGET) $(RSC_DIR)
-	@mkdir -p $(dir $@)
+	@mkdir -p $(@D)
 	$(BUILD_PRC) -o $(PRC) \
 	  -n "$(APPNAME)" -c $(CREATOR) -t $(TYPE) -v "$(VERSION)" \
 	  $(TARGET) $(RSC_DIR)/*
