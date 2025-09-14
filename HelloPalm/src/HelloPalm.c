@@ -113,7 +113,7 @@ static Boolean AppHandleEvent(EventPtr eventP)
         int NameLength;
 
          /* Write a log line */
-         LogDB_Log("MainSubmitButton Clicked");
+         //LogDB_Log("MainSubmitButton Clicked");
 
         frmP = FrmGetActiveForm();
 
@@ -201,8 +201,8 @@ UInt32 PilotMain(UInt16 cmd, MemPtr cmdPBP, UInt16 launchFlags)
      {
        case sysAppLaunchCmdNormalLaunch:
 
-         err = LogDB_Init("HelloPalm");
-         if (err) return err;
+         //err = LogDB_Init("HelloPalm");
+         //if (err) return err;
 
          FrmGotoForm(MainForm);
 			
@@ -217,7 +217,7 @@ UInt32 PilotMain(UInt16 cmd, MemPtr cmdPBP, UInt16 launchFlags)
                    FrmDispatchEvent(&event);
 
            } while (event.eType != appStopEvent);
-         LogDB_Close();
+         //LogDB_Close();
          break;
 
 	   default:
