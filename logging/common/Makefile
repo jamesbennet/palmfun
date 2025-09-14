@@ -20,7 +20,7 @@ $(BUILD_DIR):
 
 # Compile src/foo.c -> build/foo.o
 $(BUILD_DIR)/%.o: src/%.c | $(BUILD_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@ -lPalmOSGlue
 
 clean:
 	rm -rf $(BUILD_DIR)
