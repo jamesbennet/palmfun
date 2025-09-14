@@ -37,7 +37,7 @@ $(BUILD_DIR)/$(APPNAME).prc: $(TARGET) $(BUILD_DIR)/$(APPNAME).ro | $(BUILD_DIR)
 
 # Link objects into PalmOS executable
 $(TARGET): $(OBJS) | $(BUILD_DIR)
-	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS) -lPalmOSGlue
 
 # Generic compile rule for any source in src/
 $(BUILD_DIR)/%.o: src/%.c | $(BUILD_DIR)
