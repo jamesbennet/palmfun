@@ -107,13 +107,13 @@ static Boolean AppHandleEvent(EventPtr eventP)
        else if (eventP->data.ctlSelect.controlID == MainSubmitButton)
          {
 
-         /* Write a log line */
-         LogDB_Log("MainSubmitButton Clicked");
-
         ControlType *One,*Two;
         FieldPtr TextFieldPtr;
         char Name[128];
         int NameLength;
+
+         /* Write a log line */
+         LogDB_Log("MainSubmitButton Clicked");
 
         frmP = FrmGetActiveForm();
 
