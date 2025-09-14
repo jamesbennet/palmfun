@@ -10,32 +10,49 @@ VERSION      := 1.0
 PALM_SDK     ?= /opt/palmdev/sdk-4/include
 
 CC           := m68k-palmos-gcc
-CFLAGS       := -O2 -Wall -I$(PALM_SDK) -m68000 -palmos4
+CFLAGS       := -Os -fno-builtin -Wall -I$(PALM_SDK) -Ires -m68000 -palmos4
 LDFLAGS      := -m68000 -palmos4
 
 PILRC        := pilrc
 BUILD_PRC    := build-prc
 
-OBJS  := LogViewer.o ../common/LogDB.o
+BUILD_DIR    := build
+# Auto-pick all .c files under src/
+SRCS := $(wildcard src/*.c)
+OBJS := $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(SRCS)) ../common/build/LogDB.o
+TARGET := $(BUILD_DIR)/$(APPNAME)
 
-all: $(APPNAME).prc
+RCP          := res/LogViewer.rcp
+PRC          := $(TARGET).prc
 
-$(APPNAME).prc: $(APPNAME) $(APPNAME).ro
-	$(BUILD_PRC) -o $(APPNAME).prc -t $(TYPE) -c $(CREATOR) -n "$(APPNAME)" $(APPNAME) $(APPNAME).ro
+all: $(PRC)
 
-$(APPNAME): $(OBJS)
-	$(CC) $(CFLAGS) -o $(APPNAME) $(OBJS) $(LDFLAGS)
+# Ensure build dir exists
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
-LogViewer.o: LogViewer.c LogViewer.h ../common/LogDB.h
-	$(CC) $(CFLAGS) -c LogViewer.c
+# Package PRC: code + resources
+$(BUILD_DIR)/$(APPNAME).prc: $(TARGET) $(BUILD_DIR)/$(APPNAME).ro | $(BUILD_DIR)
+	$(BUILD_PRC) -o $@ -t $(TYPE) -c $(CREATOR) -n "$(APPNAME)" $(TARGET) $(BUILD_DIR)/$(APPNAME).ro
 
-../common/LogDB.o: ../common/LogDB.c ../common/LogDB.h
-	$(CC) $(CFLAGS) -c ../common/LogDB.c -o ../common/LogDB.o
+# Link objects into PalmOS executable
+$(TARGET): $(OBJS) | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS)
 
-$(APPNAME).ro: LogViewer.rcp LogViewer.h
-	$(PILRC) -ro -name "$(APPNAME)" -type $(TYPE) -creator $(CREATOR) -o $(APPNAME).ro LogViewer.rcp
+# Generic compile rule for any source in src/
+$(BUILD_DIR)/%.o: src/%.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Build shared object via common/Makefile
+../common/build/LogDB.o:
+	$(MAKE) -C ../common
+
+# Compile resources via PilRC
+$(BUILD_DIR)/$(APPNAME).ro: $(RCP) src/LogViewer.h | $(BUILD_DIR)
+	$(PILRC) -ro -name "$(APPNAME)" -type $(TYPE) -creator $(CREATOR) -o $@ $(RCP)
 
 clean:
-	rm -f $(APPNAME) *.o ../common/LogDB.o $(APPNAME).ro $(APPNAME).prc
+	rm -rf $(BUILD_DIR)
+	$(MAKE) -C ../common clean
 
 .PHONY: all clean

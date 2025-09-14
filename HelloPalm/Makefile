@@ -16,24 +16,30 @@ LDFLAGS      := -m68000 -palmos4
 PILRC        := pilrc
 BUILD_PRC    := build-prc
 
-SRC          := src/HelloPalm.c
-OBJ          := $(SRC:.c=.o)
+BUILD_DIR    := build
+# Auto-pick all .c files under src/
+SRCS := $(wildcard src/*.c)
+OBJS := $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(SRCS))
+TARGET := $(BUILD_DIR)/$(APPNAME)
 
 RCP          := res/HelloPalm.rcp
 RCP_DIR      := $(dir $(RCP))
-RSC_DIR      := build/rsrc
-BIN          := build/$(APPNAME)
-PRC          := build/$(APPNAME).prc
+RSC_DIR      := $(BUILD_DIR)/rsrc
+PRC          := $(TARGET).prc
 
 all: $(PRC)
 
-# Compile C → object
+# Ensure build dir exists
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+# Generic compile rule for any source in src/
 src/%.o: src/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Link objects into PalmOS executable
-$(BIN): $(OBJ)
+$(TARGET): $(OBJS)
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -o $@ $^ -lPalmOSGlue
 
@@ -43,11 +49,11 @@ $(RSC_DIR): $(RCP)
 	( cd $(RSC_DIR) && $(PILRC) -q -I "$(abspath $(PALM_SDK))" -I "$(abspath $(RCP_DIR))" "$(abspath $(RCP))" )
 
 # Package PRC: code + resources
-$(PRC): $(BIN) $(RSC_DIR)
+$(PRC): $(TARGET) $(RSC_DIR)
 	@mkdir -p $(dir $@)
 	$(BUILD_PRC) -o $(PRC) \
 	  -n "$(APPNAME)" -c $(CREATOR) -t $(TYPE) -v "$(VERSION)" \
-	  $(BIN) $(RSC_DIR)/*
+	  $(TARGET) $(RSC_DIR)/*
 
 clean:
 	rm -rf build src/*.o
